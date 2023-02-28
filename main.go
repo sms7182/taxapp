@@ -29,20 +29,33 @@ func main() {
 	normalize(base)
 }
 
+type SignaturePacketRequest struct {
+	Authorization  string
+	RequestTraceId string `json:"requestTraceId"`
+	TimeStamp      string `json:"timestamp"`
+	Packet         Packet `json:"packet"`
+}
+type SignaturePacketsRequest struct {
+	Authorization  string
+	RequestTraceId string   `json:"requestTraceId"`
+	TimeStamp      string   `json:"timestamp"`
+	Packets        []Packet `json:"packets"`
+}
+
 type BodyReq struct {
 	Time   int    `json:"time"`
 	Packet Packet `json:"packet"`
 }
 type Packet struct {
-	Uid             string       `json:"uid"`
-	PacketType      string       `json:"packetType"`
-	Retry           bool         `json:"retry"`
-	Data            *interface{} `json:"data"`
-	EncryptionKeyId string       `json:"encryptionKeyId"`
-	SymmetricKey    string       `json:"symmetricKey"`
-	IV              string       `json:"iv"`
-	FiscalId        string       `json:"fiscalId"`
-	DataSignature   string       `json:"dataSignature"`
+	Uid             string      `json:"uid"`
+	PacketType      string      `json:"packetType"`
+	Retry           bool        `json:"retry"`
+	Data            interface{} `json:"data"`
+	EncryptionKeyId string      `json:"encryptionKeyId"`
+	SymmetricKey    string      `json:"symmetricKey"`
+	IV              string      `json:"iv"`
+	FiscalId        string      `json:"fiscalId"`
+	DataSignature   string      `json:"dataSignature"`
 }
 type Base struct {
 	SecondLevelOne int
@@ -121,13 +134,28 @@ type BodyResponse struct {
 }
 
 func get_token() (*string, error) {
+
 	url := fmt.Sprintf("https://tp.tax.gov.ir/req/")
 
 	tokenUrl := fmt.Sprintf(url, "api/self-tsp/sync/GET_TOKEN")
-	token_req := TokenBody{
-		UserName: "",
+
+	rqId, _ := uuid.NewV4()
+	timeNow := time.Now()
+
+	sPacketReq := SignaturePacketRequest{
+		Authorization:  "",
+		RequestTraceId: rqId.String(),
+		TimeStamp:      timeNow.String(),
+		Packet: Packet{
+			Uid:        rqId.String(),
+			PacketType: "GET_TOKEN",
+			Retry:      false,
+			Data: TokenBody{
+				UserName: "A118GE",
+			},
+		},
 	}
-	jsonBytes, err := json.Marshal(token_req)
+	jsonBytes, err := json.Marshal(sPacketReq)
 	if err != nil {
 		fmt.Printf("json marshal has error %s", err.Error())
 		return nil, err
@@ -142,7 +170,7 @@ func get_token() (*string, error) {
 	}
 	traceId, _ := uuid.NewV4()
 	request.Header.Set("requestTraceId", traceId.String())
-	request.Header.Set("timestamp", time.Now().String())
+	request.Header.Set("timestamp", timeNow.String())
 	request.Header.Set("Content-Type", "application/json")
 	client := http.Client{
 		Timeout: 30 * time.Second,
