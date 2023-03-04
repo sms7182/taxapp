@@ -1,0 +1,1 @@
+This project for management the tax from every finance action, ghatering the tax data and send to Tax organization.
