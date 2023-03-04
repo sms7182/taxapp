@@ -11,6 +11,9 @@ import (
 	"strconv"
 	"time"
 
+	"tax-app/external/exkafka"
+	"tax-app/external/gateway"
+	"tax-app/external/pg"
 	"tax-app/utility"
 
 	"github.com/gofrs/uuid"
@@ -28,14 +31,22 @@ func setUpViper() {
 	viper.SetConfigName(getEnv("CONFIG_NAME", "dev-conf"))
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("./conf")
-	// db := getGormDb()
-	// repository := pg.RepositoryImpl{
-	// 	DB: db,
-	// }
+	db := getGormDb()
+	repository := pg.RepositoryImpl{
+		DB: db,
+	}
 
-	// client := gateway.ClientLoggerExtensionImpl{
-	// 	GatewayRepository: repository,
-	// }
+	client := gateway.ClientLoggerExtensionImpl{
+		GatewayRepository: repository,
+	}
+	service := pg.ServiceImp{
+		Repository: repository,
+		Client:     client,
+	}
+
+	kafka := exkafka.KafkaConsumer{
+		Service: service,
+	}
 
 	err := viper.ReadInConfig()
 	if err != nil {
