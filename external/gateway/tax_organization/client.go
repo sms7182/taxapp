@@ -1,9 +1,7 @@
 package taxorganization
 
-import (
-	"tax-app/external/gateway"
-)
+import "tax-app/pkg"
 
 type ClientImpl struct {
-	HttpClient gateway.ClientLoggerExtension
+	HttpClient pkg.ClientLoggerExtension
 }

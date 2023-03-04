@@ -5,14 +5,11 @@ import (
 	"errors"
 	"io/ioutil"
 	"net/http"
+	"tax-app/pkg"
 )
 
-type ClientLoggerExtension interface {
-	Do(requestTranceId string, signature string, packetType string, request *http.Request, gateway string) (*http.Response, error)
-}
-
 type ClientLoggerExtensionImpl struct {
-	GatewayRepository Repository
+	GatewayRepository pkg.ClientRepository
 }
 
 func (h ClientLoggerExtensionImpl) Do(requestTranceId string, signature string, packetType string, request *http.Request, gateway string) (*http.Response, error) {

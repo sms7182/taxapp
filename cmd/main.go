@@ -5,31 +5,61 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
 	"tax-app/utility"
 
 	"github.com/gofrs/uuid"
+	"github.com/spf13/viper"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 func main() {
-	//getServerList()
-	get_token()
-
-	// lt := LevelTwo{
-	// 	FirstLevelTwo: 75,
-	// }
-	// base := Base{
-
-	// 	SecondLevelOne: 70,
-	// 	ThirdLevelOne:  lt,
-	// 	FirstLevelOne:  "Test",
-	// }
-	// normalize(base)
+	setUpViper()
 }
 
+func setUpViper() {
+	viper.SetConfigName(getEnv("CONFIG_NAME", "dev-conf"))
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("./conf")
+	// db := getGormDb()
+	// repository := pg.RepositoryImpl{
+	// 	DB: db,
+	// }
+
+	// client := gateway.ClientLoggerExtensionImpl{
+	// 	GatewayRepository: repository,
+	// }
+
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Fatalf("Fatal error config file: %+v \n", err)
+	}
+}
+
+func getGormDb() *gorm.DB {
+	db, err := gorm.Open(postgres.Open(viper.GetString("postgresSource")), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Info),
+	})
+	if err != nil {
+		log.Fatalf("failed to initial gorm DB")
+	}
+
+	return db
+}
+
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
 func get_token() (*string, error) {
 
 	url := fmt.Sprintf("https://tp.tax.gov.ir/req/api/self-tsp/sync/GET_TOKEN")
