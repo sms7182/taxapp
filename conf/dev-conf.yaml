@@ -1,0 +1,3 @@
+serverPort: ":9000"
+postgresSource: "host=192.168.88.101 user=pgsql dbname=payment sslmode=disable password=Astronomiex1235"
+pgMigrationSource: "postgres://pgsql:Astronomiex1235@192.168.88.101:5432/payment?sslmode=disable&search_path=public"

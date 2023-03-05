@@ -5,18 +5,23 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
+
 	"net/http"
 	"os"
 	"strconv"
 	"time"
 
-	"tax-app/external/exkafka"
 	"tax-app/external/gateway"
 	"tax-app/external/pg"
+	"tax-app/pkg"
 	"tax-app/utility"
 
+	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/golang-migrate/migrate/v4/source/github"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -25,12 +30,6 @@ import (
 
 func main() {
 	setUpViper()
-}
-
-func setUpViper() {
-	viper.SetConfigName(getEnv("CONFIG_NAME", "dev-conf"))
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath("./conf")
 	db := getGormDb()
 	repository := pg.RepositoryImpl{
 		DB: db,
@@ -43,19 +42,30 @@ func setUpViper() {
 		Repository: repository,
 		Client:     client,
 	}
-
-	kafka := exkafka.KafkaConsumer{
+	controller := pkg.Controller{
 		Service: service,
 	}
+	router := gin.New()
+	controller.SetRoutes(router)
 
 	err := viper.ReadInConfig()
 	if err != nil {
 		log.Fatalf("Fatal error config file: %+v \n", err)
 	}
+
+	router.Run(viper.GetString("serverPort"))
+}
+
+func setUpViper() {
+	viper.SetConfigName(getEnv("CONFIG_NAME", "dev-conf"))
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("./conf")
+
 }
 
 func getGormDb() *gorm.DB {
-	db, err := gorm.Open(postgres.Open(viper.GetString("postgresSource")), &gorm.Config{
+	connection := viper.GetString("postgresSource")
+	db, err := gorm.Open(postgres.Open(connection), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
