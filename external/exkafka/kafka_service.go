@@ -6,13 +6,24 @@ import (
 	"fmt"
 	"tax-management/pkg"
 
+	"github.com/gofrs/uuid"
 	"github.com/segmentio/kafka-go"
 )
 
 type KafkaServiceImpl struct {
-	Reader *kafka.Reader
+	Reader     *kafka.Reader
+	Writer     *kafka.Writer
+	Repository pkg.ClientRepository
+}
 
-	Service pkg.Service
+func (kpi KafkaServiceImpl) Publish(msg string) error {
+	key, _ := uuid.NewV4()
+	bytes := []byte(msg)
+	err := kpi.Writer.WriteMessages(context.Background(), kafka.Message{
+		Key:   []byte((key).String()),
+		Value: bytes,
+	})
+	return err
 }
 
 func (kpi KafkaServiceImpl) Consumer(id string, err error) {
@@ -34,8 +45,7 @@ func (kpi KafkaServiceImpl) Read(id string, callback func(string, error)) {
 			callback(id, err)
 			continue
 		}
-		err = kpi.Reader.CommitMessages(ctx, message)
-		if err != nil {
+		if err := kpi.Reader.CommitMessages(ctx, message); err != nil {
 			callback(id, err)
 			continue
 		}

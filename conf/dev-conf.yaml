@@ -3,5 +3,5 @@ postgresSource: "host=192.168.88.101 user=pgsql dbname=payment sslmode=disable p
 pgMigrationSource: "postgres://pgsql:Astronomiex1235@192.168.88.101:5432/payment?sslmode=disable&search_path=public"
 kafka:
   urls: "localhost:9092"
-  topic: "ticket-bc"
+  topic: "taxmanagement"
   facility: "local-dev-tax"

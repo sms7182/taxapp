@@ -55,7 +55,8 @@ func main() {
 	})
 
 	controller := pkg.Controller{
-		Service: service,
+		Service:      service,
+		KafkaService: kafkaService,
 	}
 	router := gin.New()
 	controller.SetRoutes(router)
@@ -65,12 +66,12 @@ func main() {
 func kafkaConfiguration() exkafka.KafkaServiceImpl {
 	topic := viper.GetString("kafka.topic")
 	bs := viper.GetString("kafka.urls")
-	// w := &kafka.Writer{
-	// 	Addr:  kafka.TCP(bs),
-	// 	Topic: topic,
-	// }
+	writer := &kafka.Writer{
+		Addr:  kafka.TCP(bs),
+		Topic: topic,
+	}
 
-	r := kafka.NewReader(kafka.ReaderConfig{
+	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:   []string{bs},
 		Topic:     topic,
 		Partition: 0,
@@ -79,9 +80,9 @@ func kafkaConfiguration() exkafka.KafkaServiceImpl {
 		GroupID:   "tax-management",
 	})
 
-	r.SetOffset(0)
+	reader.SetOffset(0)
 
-	return exkafka.KafkaServiceImpl{Reader: r}
+	return exkafka.KafkaServiceImpl{Reader: reader, Writer: writer}
 
 }
 func setUpViper() {
