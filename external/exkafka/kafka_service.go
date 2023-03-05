@@ -1,19 +1,29 @@
 package exkafka
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"strconv"
 	"tax-management/pkg"
+	"tax-management/utility"
+	"time"
 
 	"github.com/gofrs/uuid"
 	"github.com/segmentio/kafka-go"
 )
 
 type KafkaServiceImpl struct {
-	Reader     *kafka.Reader
-	Writer     *kafka.Writer
-	Repository pkg.ClientRepository
+	Reader        *kafka.Reader
+	Writer        *kafka.Writer
+	Repository    pkg.ClientRepository
+	Client        pkg.ClientLoggerExtension
+	Url           string
+	TokenUrl      string
+	ServerInfoUrl string
 }
 
 func (kpi KafkaServiceImpl) Publish(msg string) error {
@@ -55,4 +65,140 @@ func (kpi KafkaServiceImpl) Read(id string, callback func(string, error)) {
 		}
 		callback(id, nil)
 	}
+}
+
+func (ksi KafkaServiceImpl) get_token() (*string, error) {
+
+	url := fmt.Sprintf(ksi.Url, ksi.TokenUrl)
+
+	rqId, _ := uuid.NewV4()
+	timeNow := time.Now().Unix()
+	tstr := strconv.FormatInt(timeNow, 10)
+	sPacketReq := utility.SignaturePacketRequest{
+
+		RequestTraceId: rqId.String(),
+		TimeStamp:      tstr,
+		ContentType:    "application/json",
+		Packet: utility.Packet{
+			Uid:        rqId.String(),
+			PacketType: "GET_TOKEN",
+			Retry:      false,
+			Data: utility.TokenBody{
+				UserName: "A118GE",
+			},
+		},
+	}
+
+	normalized, err := utility.Normalize(sPacketReq)
+	if err != nil {
+		// update for retry has error in normalize
+		// notif to developer
+		fmt.Printf("normalize has error,%s", err.Error())
+	}
+	signature, err := utility.SignAndVerify(normalized)
+	if err != nil {
+		fmt.Printf("sign has error %s", err.Error())
+		// update for retry has error in normalize
+		// notif to developer
+	}
+	postRequest := utility.PostDataRequest{
+		RequestTraceId: rqId.String(),
+		TimeStamp:      tstr,
+		ContentType:    "application/json",
+		Packet: utility.Packet{
+			Uid:        rqId.String(),
+			PacketType: "GET_TOKEN",
+			Retry:      false,
+			Data: utility.TokenBody{
+				UserName: "A118GE",
+			},
+		},
+		Signature: signature,
+	}
+	jsonBytes, err := json.Marshal(postRequest)
+	if err != nil {
+		fmt.Printf("json marshal has error %s", err.Error())
+		return nil, err
+	}
+	reader := bytes.NewReader(jsonBytes)
+
+	request, err := http.NewRequest("POST", url, reader)
+
+	if err != nil {
+		fmt.Printf("response has error %s", err.Error())
+		return nil, err
+	}
+	traceId, _ := uuid.NewV4()
+	request.Header.Set("requestTraceId", traceId.String())
+	request.Header.Set("timestamp", tstr)
+	request.Header.Set("Content-Type", "application/json")
+	client := http.Client{
+		Timeout: 30 * time.Second,
+	}
+	//client := ksi.Client
+	//resp, err := client.Do(postRequest.RequestTraceId, *signature, postRequest.Packet.PacketType, request, url)
+	resp, err := client.Do(request)
+	if err != nil {
+		fmt.Printf("response has error %s", err.Error())
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("read response has error %s", err.Error())
+		return nil, err
+	}
+	var tokenResponse utility.TokenResponse
+	err = json.Unmarshal(body, &tokenResponse)
+	if err != nil {
+		fmt.Printf("responseJson has error %s", err.Error())
+		return nil, err
+	}
+	return &tokenResponse.Token, nil
+}
+
+func (ksi KafkaServiceImpl) getServerList() string {
+	url := fmt.Sprintf("https://tp.tax.gov.ir/req/api/tsp/sync/GET_SERVER_INFORMATION")
+	id, _ := uuid.NewV4()
+
+	bodyReq := utility.BodyReq{
+		Time: 2,
+		Packet: utility.Packet{
+			Uid:             id.String(),
+			PacketType:      "GET_SERVER_INFORMATION",
+			Retry:           false,
+			Data:            utility.TokenBody{},
+			EncryptionKeyId: "",
+			SymmetricKey:    "",
+			IV:              "",
+			FiscalId:        "",
+			DataSignature:   "",
+		},
+	}
+	marshaled, err := json.Marshal(bodyReq)
+	if err != nil {
+		fmt.Printf("has error create request")
+	}
+
+	jsonBytes := bytes.NewReader(marshaled)
+	request, err := http.NewRequest("POST", url, jsonBytes)
+	request.Header.Set("requestTraceId", id.String())
+	request.Header.Set("timestampt", time.Now().String())
+	request.Header.Set("Content-Type", "application/json")
+	client := http.Client{
+		Timeout: 30 * time.Second,
+	}
+	resp, err := client.Do(request)
+	if err != nil {
+		fmt.Printf("response has error %s", err.Error())
+
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	var bodyObj utility.BodyResponse
+
+	if err != nil {
+		fmt.Printf("read response has error %s", err.Error())
+
+	}
+	json.Unmarshal(body, &bodyObj)
+	return bodyObj.Result.Data.PublicKeys[0].Key
 }

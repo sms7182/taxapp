@@ -5,3 +5,7 @@ kafka:
   urls: "localhost:9092"
   topic: "taxmanagement"
   facility: "local-dev-tax"
+taxOrg:
+  url: "https://tp.tax.gov.ir"
+  tokenUrl: "/req/api/self-tsp/sync/GET_TOKEN"
+  serverInformationUrl: "/req/api/tsp/sync/GET_SERVER_INFORMATION"
