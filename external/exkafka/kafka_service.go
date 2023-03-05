@@ -27,6 +27,9 @@ type KafkaServiceImpl struct {
 	ServerInfoUrl string
 }
 
+func getTokenKey() string {
+	return "tax-token"
+}
 func (kpi KafkaServiceImpl) Publish(msg string) error {
 	key, _ := uuid.NewV4()
 
@@ -42,7 +45,19 @@ func (kpi KafkaServiceImpl) Publish(msg string) error {
 }
 
 func (kpi KafkaServiceImpl) Consumer(id string, err error) {
-	fmt.Printf("id from message %s", id)
+	ctx := context.Background()
+	token, err := kpi.Redis.Get(ctx, getTokenKey())
+	if err != nil {
+		tokenResp, err := kpi.get_token()
+		if err != nil {
+			fmt.Printf("Get token has error %s", err.Error())
+		} else {
+			if tokenResp != nil {
+				kpi.Redis.Set(ctx, getTokenKey(), *tokenResp, 3000)
+			}
+		}
+	}
+	fmt.Printf("just for using token %s", token)
 }
 func (kpi KafkaServiceImpl) Read(id string, callback func(string, error)) {
 	for {
