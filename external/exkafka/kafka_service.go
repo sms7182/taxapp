@@ -158,7 +158,7 @@ func (ksi KafkaServiceImpl) get_token() (*string, error) {
 }
 
 func (ksi KafkaServiceImpl) getServerList() string {
-	url := fmt.Sprintf("https://tp.tax.gov.ir/req/api/tsp/sync/GET_SERVER_INFORMATION")
+	url := fmt.Sprintf(ksi.Url, ksi.ServerInfoUrl)
 	id, _ := uuid.NewV4()
 
 	bodyReq := utility.BodyReq{
@@ -182,6 +182,9 @@ func (ksi KafkaServiceImpl) getServerList() string {
 
 	jsonBytes := bytes.NewReader(marshaled)
 	request, err := http.NewRequest("POST", url, jsonBytes)
+	if err != nil {
+		fmt.Printf("Create Post request has error %s", err.Error())
+	}
 	request.Header.Set("requestTraceId", id.String())
 	request.Header.Set("timestampt", time.Now().String())
 	request.Header.Set("Content-Type", "application/json")
