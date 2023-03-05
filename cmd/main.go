@@ -60,7 +60,10 @@ func setUpViper() {
 	viper.SetConfigName(getEnv("CONFIG_NAME", "dev-conf"))
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("./conf")
-
+	err := viper.ReadInConfig()
+	if err != nil {
+		log.Fatalf("Fatal error config file: %+v \n", err)
+	}
 }
 
 func getGormDb() *gorm.DB {
