@@ -21,6 +21,7 @@ type KafkaServiceImpl struct {
 	Writer        *kafka.Writer
 	Repository    pkg.ClientRepository
 	Client        pkg.ClientLoggerExtension
+	Redis         pkg.RedisService
 	Url           string
 	TokenUrl      string
 	ServerInfoUrl string

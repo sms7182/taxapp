@@ -11,6 +11,8 @@ import (
 	"tax-management/pkg"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/go-redis/redis/v8"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/golang-migrate/migrate/v4/source/github"
@@ -36,7 +38,9 @@ func main() {
 		Repository: repository,
 		Client:     client,
 	}
-	kafkaService := kafkaConfiguration()
+	rdb := getActualRedisClient()
+	redisClient := getRedisClient(rdb)
+	kafkaService := kafkaConfiguration(repository, redisClient)
 
 	var id string
 
@@ -56,7 +60,7 @@ func main() {
 
 	router.Run(viper.GetString("serverPort"))
 }
-func kafkaConfiguration() exkafka.KafkaServiceImpl {
+func kafkaConfiguration(repository pg.RepositoryImpl, redis pg.RedisServiceImpl) exkafka.KafkaServiceImpl {
 	topic := viper.GetString("kafka.topic")
 	bs := viper.GetString("kafka.urls")
 	writer := &kafka.Writer{
@@ -82,8 +86,18 @@ func kafkaConfiguration() exkafka.KafkaServiceImpl {
 		Url:           viper.GetString("taxOrg.url"),
 		TokenUrl:      viper.GetString("taxOrg.tokenUrl"),
 		ServerInfoUrl: viper.GetString("taxOrg.serverInformationUrl"),
+		Redis:         redis,
+		Repository:    repository,
 	}
 
+}
+
+func getActualRedisClient() *redis.Client {
+	return redis.NewClient(&redis.Options{
+		Addr:     viper.GetString("redis.url"),
+		Password: viper.GetString("redis.password"),
+		DB:       viper.GetInt("redis.db"),
+	})
 }
 func setUpViper() {
 	viper.SetConfigName(getEnv("CONFIG_NAME", "dev-conf"))
@@ -94,7 +108,9 @@ func setUpViper() {
 		log.Fatalf("Fatal error config file: %+v \n", err)
 	}
 }
-
+func getRedisClient(rdb *redis.Client) pg.RedisServiceImpl {
+	return pg.RedisServiceImpl{Rdb: rdb}
+}
 func getGormDb() *gorm.DB {
 	connection := viper.GetString("postgresSource")
 	db, err := gorm.Open(postgres.Open(connection), &gorm.Config{
