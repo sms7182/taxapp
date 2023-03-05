@@ -1,4 +1,6 @@
 package pkg
 
-type KafkaConsumer interface {
+type KafkaService interface {
+	Consumer(msg string, err error)
+	Read(id string, callback func(string, error))
 }

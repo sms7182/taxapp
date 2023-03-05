@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 
+	"tax-management/external/exkafka"
 	"tax-management/external/gateway"
 	"tax-management/external/pg"
 	"tax-management/pkg"
@@ -21,6 +22,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/golang-migrate/migrate/v4/source/github"
+	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gorm.io/driver/postgres"
@@ -42,20 +44,46 @@ func main() {
 		Repository: repository,
 		Client:     client,
 	}
+	kafkaService := kafkaConfiguration()
+	var id string
+
+	go kafkaService.Read(id, func(id string, err error) {
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		kafkaService.Consumer(id, err)
+	})
+
 	controller := pkg.Controller{
 		Service: service,
 	}
 	router := gin.New()
 	controller.SetRoutes(router)
 
-	err := viper.ReadInConfig()
-	if err != nil {
-		log.Fatalf("Fatal error config file: %+v \n", err)
-	}
-
 	router.Run(viper.GetString("serverPort"))
 }
+func kafkaConfiguration() exkafka.KafkaServiceImpl {
+	topic := viper.GetString("kafka.topic")
+	bs := viper.GetString("kafka.urls")
+	// w := &kafka.Writer{
+	// 	Addr:  kafka.TCP(bs),
+	// 	Topic: topic,
+	// }
 
+	r := kafka.NewReader(kafka.ReaderConfig{
+		Brokers:   []string{bs},
+		Topic:     topic,
+		Partition: 0,
+		MinBytes:  10e3, // 10KB
+		MaxBytes:  10e6, // 10MB
+		GroupID:   "tax-management",
+	})
+
+	r.SetOffset(0)
+
+	return exkafka.KafkaServiceImpl{Reader: r}
+
+}
 func setUpViper() {
 	viper.SetConfigName(getEnv("CONFIG_NAME", "dev-conf"))
 	viper.SetConfigType("yaml")
@@ -84,6 +112,7 @@ func getEnv(key, fallback string) string {
 	}
 	return fallback
 }
+
 func get_token() (*string, error) {
 
 	url := fmt.Sprintf("https://tp.tax.gov.ir/req/api/self-tsp/sync/GET_TOKEN")
