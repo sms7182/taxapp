@@ -67,8 +67,9 @@ func kafkaConfiguration() exkafka.KafkaServiceImpl {
 	topic := viper.GetString("kafka.topic")
 	bs := viper.GetString("kafka.urls")
 	writer := &kafka.Writer{
-		Addr:  kafka.TCP(bs),
-		Topic: topic,
+		Addr:     kafka.TCP(bs),
+		Topic:    topic,
+		Balancer: &kafka.LeastBytes{},
 	}
 
 	reader := kafka.NewReader(kafka.ReaderConfig{

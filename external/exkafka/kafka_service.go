@@ -18,8 +18,12 @@ type KafkaServiceImpl struct {
 
 func (kpi KafkaServiceImpl) Publish(msg string) error {
 	key, _ := uuid.NewV4()
-	bytes := []byte(msg)
-	err := kpi.Writer.WriteMessages(context.Background(), kafka.Message{
+
+	bytes, err := json.Marshal(msg)
+	if err != nil {
+		return err
+	}
+	err = kpi.Writer.WriteMessages(context.Background(), kafka.Message{
 		Key:   []byte((key).String()),
 		Value: bytes,
 	})
@@ -33,7 +37,7 @@ func (kpi KafkaServiceImpl) Read(id string, callback func(string, error)) {
 	for {
 
 		ctx := context.Background()
-		message, err := kpi.Reader.ReadMessage(ctx)
+		message, err := kpi.Reader.FetchMessage(ctx)
 
 		if err != nil {
 			callback(id, err)
