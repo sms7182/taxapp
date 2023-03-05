@@ -11,10 +11,10 @@ import (
 	"strconv"
 	"time"
 
-	"tax-app/external/gateway"
-	"tax-app/external/pg"
-	"tax-app/pkg"
-	"tax-app/utility"
+	"tax-management/external/gateway"
+	"tax-management/external/pg"
+	"tax-management/pkg"
+	"tax-management/utility"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gofrs/uuid"

@@ -1,7 +1,7 @@
 package exkafka
 
 import (
-	"tax-app/pkg"
+	"tax-management/pkg"
 
 	"github.com/segmentio/kafka-go"
 )

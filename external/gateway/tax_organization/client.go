@@ -1,6 +1,6 @@
 package taxorganization
 
-import "tax-app/pkg"
+import "tax-management/pkg"
 
 type ClientImpl struct {
 	HttpClient pkg.ClientLoggerExtension

@@ -1,6 +1,6 @@
 package pg
 
-import "tax-app/pkg"
+import "tax-management/pkg"
 
 type ServiceImp struct {
 	Repository pkg.ClientRepository
