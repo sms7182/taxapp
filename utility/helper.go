@@ -2,11 +2,14 @@ package utility
 
 import (
 	"crypto"
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
@@ -16,6 +19,82 @@ import (
 	"strings"
 )
 
+type Detail struct {
+	Quantity int `json:"quantity"`
+	Price    int `json:"price"`
+}
+type DataToEncrypt struct {
+	Detail []Detail `json:"detail"`
+
+	Description string `json:"description"`
+}
+
+func Encrypt() string {
+	data := DataToEncrypt{
+		Description: "test encryption",
+	}
+	data.Detail = append(data.Detail, Detail{
+		Quantity: 2,
+		Price:    250,
+	})
+	key := make([]byte, 32)
+	if _, err := rand.Read(key); err != nil {
+		fmt.Printf("has error %s", err.Error())
+	}
+	bytes, err := json.Marshal(key)
+	if err != nil {
+		fmt.Printf("has error %s", err.Error())
+	}
+
+	block, err := aes.NewCipher(key)
+
+	aesGCM, err := cipher.NewGCM(block)
+	nonce := make([]byte, aesGCM.NonceSize())
+	result := aesGCM.Seal(nonce, nonce, bytes, nil)
+	return fmt.Sprintf("%x", result)
+}
+
+func EncryptWithIV() {
+	// data := DataToEncrypt{
+	// 	Description: "test encryption",
+	// }
+	// data.Detail = append(data.Detail, Detail{
+	// 	Quantity: 2,
+	// 	Price:    250,
+	// })
+	// idwithhyphen, _ := uuid.NewV4()
+	// id := strings.Replace(idwithhyphen.String(), "-", "", -1)
+	// //iv:=make([]byte,32)
+	// //	key:=make([]byte,32)
+	// iv := []byte(id)
+	// key := []byte(id)
+
+	// if _, err := rand.Read(key); err != nil {
+	// 	fmt.Printf("has error %s", err.Error())
+	// }
+	// if _, err := rand.Read(iv); err != nil {
+	// 	fmt.Printf("has error %s", err.Error())
+	// }
+
+}
+func xor(left []byte, right []byte) []byte {
+	leftsize := len(left)
+	rightsize := len(right)
+	var min int
+	var size int
+	if leftsize > rightsize {
+		size = leftsize
+		min = rightsize
+	} else {
+		size = rightsize
+		min = leftsize
+	}
+	val := make([]byte, size)
+	for i := 0; i < min; i++ {
+		val[i] = (left[i] ^ right[i])
+	}
+	return val
+}
 func Normalize(obj interface{}) (*string, error) {
 	t := reflect.TypeOf(obj)
 	if kind := t.Kind(); kind != reflect.Struct {
