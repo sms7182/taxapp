@@ -15,9 +15,12 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/go-redis/redis/v8"
+
+	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/golang-migrate/migrate/v4/source/github"
+
 	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -29,6 +32,7 @@ import (
 func main() {
 	setUpViper()
 	db := getGormDb()
+	runDbMigrations()
 	repository := pg.RepositoryImpl{
 		DB: db,
 	}
@@ -121,6 +125,19 @@ func getGormDb() *gorm.DB {
 	}
 
 	return db
+}
+func runDbMigrations() {
+	fmt.Print("start migrations for second time")
+	m, err := migrate.New(
+		"file://db/migrations",
+		viper.GetString("pgMigrationSource"))
+	if err != nil {
+		log.Fatalf("failed to find migration files")
+	}
+
+	if err = m.Up(); err != nil && err != migrate.ErrNoChange {
+		log.Fatalf("failed to apply migrations%s", err.Error())
+	}
 }
 
 func getEnv(key, fallback string) string {

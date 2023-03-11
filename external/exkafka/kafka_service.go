@@ -44,9 +44,19 @@ func (kpi KafkaServiceImpl) Publish(msg messages.RawTransaction) error {
 	return err
 }
 
-func (kpi KafkaServiceImpl) Consumer(id *messages.RawTransaction, err error) {
+func (kpi KafkaServiceImpl) Consumer(message *messages.RawTransaction, err error) {
 	fmt.Printf("receive message")
-	// ctx := context.Background()
+	if err != nil {
+		panic("receive message has error")
+	}
+
+	ctx := context.Background()
+
+	traceId, err := kpi.Repository.InsertTaxData(ctx, *message)
+	if err != nil {
+		fmt.Errorf("Insert raw taxData has error %s", err.Error())
+	}
+	fmt.Printf("traceid of tax is :%s", *traceId)
 	// token, err := kpi.Redis.Get(ctx, getTokenKey())
 	// if err != nil {
 	// 	tokenResp, err := kpi.get_token()

@@ -11,35 +11,37 @@ import (
 type TaxStatus int
 
 const (
-	InProcess TaxStatus = iota
+	InProgress TaxStatus = iota
 	Retry
 	Failed
 	Completed
 )
 
 func (ts TaxStatus) String() string {
-	return []string{"inprocess", "retry", "failed", "completed"}[ts]
+	return []string{"inprogress", "retry", "failed", "completed"}[ts]
 }
 
-type RawTaxDomain struct {
-	Id        uint         `gorm:"autoIncrement,primaryKey"`
-	TraceId   string       `gorm:"column:trace_id"`
-	CreatedAt time.Time    `gorm:"column:created_at"`
-	TaxData   pgtype.JSONB `gorm:"type:jsonb;default:'[]'"`
-	TaxType   string       `gorm:"column:tax_type"`
-	Status    string       `gorm:"column:status"`
-	UpdatedAt time.Time    `gorm:"column:updated_at"`
+type TaxRawDomain struct {
+	Id            uint         `gorm:"autoIncrement,primaryKey"`
+	TraceId       string       `gorm:"column:trace_id"`
+	CreatedAt     time.Time    `gorm:"column:created_at"`
+	TaxData       pgtype.JSONB `gorm:"type:jsonb;default:'[]'"`
+	TaxType       string       `gorm:"column:tax_type"`
+	ProcessStatus string       `gorm:"column:process_status"`
+	UpdatedAt     time.Time    `gorm:"column:updated_at"`
 }
 
-func (obj *RawTaxDomain) BeforeCreate(_ *gorm.DB) error {
+func (obj *TaxRawDomain) BeforeCreate(_ *gorm.DB) error {
 	id, err := uuid.NewV4()
 	if err != nil {
 		return err
 	}
 	obj.TraceId = obj.TaxType + "-" + id.String()
+	obj.CreatedAt = time.Now()
+	obj.UpdatedAt = obj.CreatedAt
 	return nil
 }
 
-func (RawTaxDomain) TableName() string {
-	return "raw_tax"
+func (TaxRawDomain) TableName() string {
+	return "tax_raw_data"
 }
