@@ -2,10 +2,12 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"os"
 
 	"tax-management/external/exkafka"
+	"tax-management/external/exkafka/messages"
 	"tax-management/external/gateway"
 	"tax-management/external/pg"
 	"tax-management/pkg"
@@ -41,16 +43,6 @@ func main() {
 	rdb := getActualRedisClient()
 	redisClient := getRedisClient(rdb)
 	kafkaService := kafkaConfiguration(repository, redisClient)
-
-	var id string
-
-	go kafkaService.Read(id, func(id string, err error) {
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-		kafkaService.Consumer(id, err)
-	})
-
 	controller := pkg.Controller{
 		Service:      service,
 		KafkaService: kafkaService,
@@ -69,19 +61,19 @@ func kafkaConfiguration(repository pg.RepositoryImpl, redis pg.RedisServiceImpl)
 		Balancer: &kafka.LeastBytes{},
 	}
 
-	reader := kafka.NewReader(kafka.ReaderConfig{
-		Brokers:   []string{bs},
-		Topic:     topic,
-		Partition: 0,
-		MinBytes:  10e3, // 10KB
-		MaxBytes:  10e6, // 10MB
-		GroupID:   "tax-management",
-	})
+	dialer := &kafka.Dialer{
+		Timeout:   10 * time.Second,
+		DualStack: true,
+	}
+	rawConsumer := messages.Consumer[*messages.RawTransaction]{
+		Dialer:  dialer,
+		Topic:   topic,
+		Brokers: []string{bs},
+	}
+	rawConsumer.CreateConnection()
 
-	reader.SetOffset(0)
+	kafkaConf := exkafka.KafkaServiceImpl{
 
-	return exkafka.KafkaServiceImpl{
-		Reader:        reader,
 		Writer:        writer,
 		Url:           viper.GetString("taxOrg.url"),
 		TokenUrl:      viper.GetString("taxOrg.tokenUrl"),
@@ -89,6 +81,14 @@ func kafkaConfiguration(repository pg.RepositoryImpl, redis pg.RedisServiceImpl)
 		Redis:         redis,
 		Repository:    repository,
 	}
+
+	go rawConsumer.Read(&messages.RawTransaction{}, func(rt *messages.RawTransaction, err error) {
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		kafkaConf.Consumer(rt, err)
+	})
+	return kafkaConf
 
 }
 

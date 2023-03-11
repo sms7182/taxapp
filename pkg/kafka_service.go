@@ -1,7 +1,8 @@
 package pkg
 
+import "tax-management/external/exkafka/messages"
+
 type KafkaService interface {
-	Consumer(msg string, err error)
-	Publish(msg string) error
-	Read(id string, callback func(string, error))
+	Consumer(msg *messages.RawTransaction, err error)
+	Publish(msg messages.RawTransaction) error
 }

@@ -21,6 +21,12 @@ func (cr Controller) SetRoutes(e *gin.Engine) {
 
 func (cr Controller) health(c *gin.Context) {
 
+	// cr.KafkaService.Publish(messages.RawTransaction{
+	// 	After: messages.AfterData{
+	// 		Taxid: "test",
+	// 	},
+	// 	Op: "OP",
+	// })
 	c.JSON(http.StatusOK, gin.H{})
 }
 

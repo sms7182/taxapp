@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strconv"
+	"tax-management/external/exkafka/messages"
 	"tax-management/pkg"
 	"tax-management/utility"
 	"time"
@@ -17,7 +18,6 @@ import (
 )
 
 type KafkaServiceImpl struct {
-	Reader        *kafka.Reader
 	Writer        *kafka.Writer
 	Repository    pkg.ClientRepository
 	Client        pkg.ClientLoggerExtension
@@ -30,7 +30,7 @@ type KafkaServiceImpl struct {
 func getTokenKey() string {
 	return "tax-token"
 }
-func (kpi KafkaServiceImpl) Publish(msg string) error {
+func (kpi KafkaServiceImpl) Publish(msg messages.RawTransaction) error {
 	key, _ := uuid.NewV4()
 
 	bytes, err := json.Marshal(msg)
@@ -44,43 +44,21 @@ func (kpi KafkaServiceImpl) Publish(msg string) error {
 	return err
 }
 
-func (kpi KafkaServiceImpl) Consumer(id string, err error) {
-	ctx := context.Background()
-	token, err := kpi.Redis.Get(ctx, getTokenKey())
-	if err != nil {
-		tokenResp, err := kpi.get_token()
-		if err != nil {
-			fmt.Printf("Get token has error %s", err.Error())
-		} else {
-			if tokenResp != nil {
-				kpi.Redis.Set(ctx, getTokenKey(), *tokenResp, 3000)
-			}
-		}
-	}
-	fmt.Printf("just for using token %s", token)
-}
-func (kpi KafkaServiceImpl) Read(id string, callback func(string, error)) {
-	for {
-
-		ctx := context.Background()
-		message, err := kpi.Reader.FetchMessage(ctx)
-
-		if err != nil {
-			callback(id, err)
-			return
-		}
-
-		err = json.Unmarshal(message.Value, &id)
-		if err != nil {
-			callback(id, err)
-			continue
-		}
-		if err := kpi.Reader.CommitMessages(ctx, message); err != nil {
-			callback(id, err)
-			continue
-		}
-		callback(id, nil)
-	}
+func (kpi KafkaServiceImpl) Consumer(id *messages.RawTransaction, err error) {
+	fmt.Printf("receive message")
+	// ctx := context.Background()
+	// token, err := kpi.Redis.Get(ctx, getTokenKey())
+	// if err != nil {
+	// 	tokenResp, err := kpi.get_token()
+	// 	if err != nil {
+	// 		fmt.Printf("Get token has error %s", err.Error())
+	// 	} else {
+	// 		if tokenResp != nil {
+	// 			kpi.Redis.Set(ctx, getTokenKey(), *tokenResp, 3000)
+	// 		}
+	// 	}
+	// }
+	// fmt.Printf("just for using token %s", token)
 }
 
 func (ksi KafkaServiceImpl) get_token() (*string, error) {
