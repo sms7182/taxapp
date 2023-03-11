@@ -95,3 +95,33 @@ type BodyRequest struct {
 	Signature      string        `json:"signature"`
 	SignatureKeyId string        `json:"signatureKeyId"`
 }
+
+// func Encrypt() string {
+// 	data := DataToEncrypt{
+// 		Description: "test encryption",
+// 	}
+// 	data.Detail = append(data.Detail, Detail{
+// 		Quantity: 2,
+// 		Price:    250,
+// 	})
+// 	key := make([]byte, 32)
+// 	if _, err := rand.Read(key); err != nil {
+// 		fmt.Printf("has error %s", err.Error())
+// 	}
+// 	bytes, err := json.Marshal(key)
+// 	if err != nil {
+// 		fmt.Printf("has error %s", err.Error())
+// 	}
+
+// 	block, err := aes.NewCipher(key)
+
+// 	aesGCM, err := cipher.NewGCM(block)
+
+// 	nonce := make([]byte, aesGCM.NonceSize())
+// 	tag := make([]byte, 16)
+// 	if _, err := rand.Read(tag); err != nil {
+// 		fmt.Printf("has error %s", err.Error())
+// 	}
+// 	result := aesGCM.Seal(nonce, nonce, bytes, tag)
+// 	return fmt.Sprintf("%x", result)
+// }

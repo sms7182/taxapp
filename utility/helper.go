@@ -9,6 +9,7 @@ import (
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
@@ -17,6 +18,8 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/gofrs/uuid"
 )
 
 type Detail struct {
@@ -29,7 +32,30 @@ type DataToEncrypt struct {
 	Description string `json:"description"`
 }
 
-func Encrypt() string {
+func Decrypt(st string, key string) []byte {
+	tagst := []byte("itismysecuretag")
+	cipherTxt, err := hex.DecodeString(st)
+	iv := []byte("d3fbd5bcbcd8")
+	block, err := aes.NewCipher([]byte(key))
+	if err != nil {
+		panic(err.Error())
+	}
+	aesgcm, err := cipher.NewGCM(block)
+	if err != nil {
+		panic(err.Error())
+	}
+	tag := []byte(tagst)
+	plaing, err := aesgcm.Open(nil, iv, cipherTxt, tag)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	xordec := xorrox(plaing, []byte(key))
+
+	return xordec
+}
+
+func EncryptWithIV() string {
 	data := DataToEncrypt{
 		Description: "test encryption",
 	}
@@ -37,44 +63,34 @@ func Encrypt() string {
 		Quantity: 2,
 		Price:    250,
 	})
-	key := make([]byte, 32)
-	if _, err := rand.Read(key); err != nil {
-		fmt.Printf("has error %s", err.Error())
-	}
-	bytes, err := json.Marshal(key)
-	if err != nil {
-		fmt.Printf("has error %s", err.Error())
-	}
 
-	block, err := aes.NewCipher(key)
-
-	aesGCM, err := cipher.NewGCM(block)
-	nonce := make([]byte, aesGCM.NonceSize())
-	result := aesGCM.Seal(nonce, nonce, bytes, nil)
-	return fmt.Sprintf("%x", result)
-}
-
-func EncryptWithIV() {
-	// data := DataToEncrypt{
-	// 	Description: "test encryption",
-	// }
-	// data.Detail = append(data.Detail, Detail{
-	// 	Quantity: 2,
-	// 	Price:    250,
-	// })
-	// idwithhyphen, _ := uuid.NewV4()
-	// id := strings.Replace(idwithhyphen.String(), "-", "", -1)
-	// //iv:=make([]byte,32)
-	// //	key:=make([]byte,32)
+	idwithhyphen, _ := uuid.NewV4()
+	id := strings.Replace(idwithhyphen.String(), "-", "", -1)
 	// iv := []byte(id)
-	// key := []byte(id)
-
+	key := []byte(id)
+	// key := make([]byte, 32)
 	// if _, err := rand.Read(key); err != nil {
 	// 	fmt.Printf("has error %s", err.Error())
-	// }
+	// // }
+	// iv := make([]byte, 12)
+
 	// if _, err := rand.Read(iv); err != nil {
 	// 	fmt.Printf("has error %s", err.Error())
+
 	// }
+	iv := []byte("d3fbd5bcbcd8")
+
+	block, err := aes.NewCipher(key)
+	js, err := json.Marshal(data)
+	if err != nil {
+		fmt.Printf("marshal has error")
+	}
+	jsxor := xorrox(js, key)
+	// tag := make([]byte, 16)
+	tag := []byte("itismysecuretag")
+	aesgcm, err := cipher.NewGCM(block)
+	result := aesgcm.Seal(nil, iv, jsxor, tag)
+	return fmt.Sprintf("%x", result)
 
 }
 func xor(left []byte, right []byte) []byte {
@@ -93,6 +109,14 @@ func xor(left []byte, right []byte) []byte {
 	for i := 0; i < min; i++ {
 		val[i] = (left[i] ^ right[i])
 	}
+	return val
+}
+func xorrox(input, key []byte) (output []byte) {
+	val := make([]byte, len(input))
+	for i := 0; i < len(input); i++ {
+		val[i] = (input[i] ^ key[i%len(key)])
+	}
+
 	return val
 }
 func Normalize(obj interface{}) (*string, error) {
