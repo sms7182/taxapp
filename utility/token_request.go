@@ -1,5 +1,12 @@
 package utility
 
+type FiscalInformationRequest struct {
+	Authorization  string
+	ContentType    string `json:"Content-Type"`
+	RequestTraceId string `json:"requestTraceId"`
+	TimeStamp      string `json:"timestamp"`
+	Packet         Packet `json:"packet"`
+}
 type SignaturePacketRequest struct {
 	//Authorization  string
 	ContentType    string `json:"Content-Type"`

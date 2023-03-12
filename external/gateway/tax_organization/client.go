@@ -19,10 +19,11 @@ type TaxAPIType int
 const (
 	GetServerInformation TaxAPIType = iota
 	GetToken
+	GetFiscalInformation
 )
 
 func (ts TaxAPIType) String() string {
-	return []string{"GET_SERVER_INFORMATION", "GET_TOKEN"}[ts]
+	return []string{"GET_SERVER_INFORMATION", "GET_TOKEN", "GET_FISCAL_INFORMATION"}[ts]
 }
 
 type ClientImpl struct {
@@ -30,6 +31,7 @@ type ClientImpl struct {
 	Url                  string
 	ServerInformationUrl string
 	TokenUrl             string
+	FiscalInformationUrl string
 	Repository           pkg.ClientRepository
 	UserName             string
 }
@@ -155,7 +157,7 @@ func (client ClientImpl) GetToken() (*utility.TokenResponse, error) {
 	request.Header.Set("requestTraceId", traceId.String())
 	request.Header.Set("timestamp", tstr)
 	request.Header.Set("Content-Type", "application/json")
-	resp, err := client.HttpClient.Do(nil, nil, traceId.String(), request, GetServerInformation.String())
+	resp, err := client.HttpClient.Do(nil, nil, traceId.String(), request, GetToken.String())
 	if err != nil {
 		fmt.Printf("response has error %s", err.Error())
 		return nil, err
@@ -178,4 +180,93 @@ func (client ClientImpl) GetToken() (*utility.TokenResponse, error) {
 		return nil, err
 	}
 	return &tokenResponse, nil
+}
+
+func (client ClientImpl) GetFiscalInformation(token string) {
+	url := client.Url + client.FiscalInformationUrl
+	rqId, _ := uuid.NewV4()
+	timeNow := time.Now().Unix()
+	tstr := strconv.FormatInt(timeNow, 10)
+	sPacketReq := utility.FiscalInformationRequest{
+		Authorization:  token,
+		RequestTraceId: rqId.String(),
+		TimeStamp:      tstr,
+		ContentType:    "application/json",
+		Packet: utility.Packet{
+			Uid:        rqId.String(),
+			PacketType: GetToken.String(),
+			Retry:      false,
+			Data: utility.TokenBody{
+				UserName: client.UserName,
+			},
+		},
+	}
+
+	normalized, err := utility.Normalize(sPacketReq)
+	if err != nil {
+		// update for retry has error in normalize
+		// notif to developer
+		fmt.Printf("normalize has error,%s", err.Error())
+		return
+	}
+	signature, err := utility.SignAndVerify(normalized)
+	if err != nil {
+		fmt.Printf("sign has error %s", err.Error())
+		// update for retry has error in normalize
+		// notif to developer
+		return
+	}
+	postRequest := utility.PostDataRequest{
+		RequestTraceId: rqId.String(),
+		TimeStamp:      tstr,
+		ContentType:    "application/json",
+		Packet: utility.Packet{
+			Uid:        rqId.String(),
+			PacketType: GetFiscalInformation.String(),
+			Retry:      false,
+			Data: utility.TokenBody{
+				UserName: client.UserName,
+			},
+		},
+		Signature: signature,
+	}
+	jsonBytes, err := json.Marshal(postRequest)
+	if err != nil {
+		fmt.Printf("json marshal has error %s", err.Error())
+		return
+	}
+	reader := bytes.NewReader(jsonBytes)
+
+	request, err := http.NewRequest("POST", url, reader)
+
+	if err != nil {
+		fmt.Printf("response has error %s", err.Error())
+		return
+	}
+
+	request.Header.Set("requestTraceId", rqId.String())
+	request.Header.Set("timestamp", tstr)
+	request.Header.Set("Content-Type", "application/json")
+	resp, err := client.HttpClient.Do(nil, nil, rqId.String(), request, GetFiscalInformation.String())
+	if err != nil {
+		fmt.Printf("response has error %s", err.Error())
+
+	}
+
+	if err != nil {
+		fmt.Printf("response has error %s", err.Error())
+
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("read response has error %s", err.Error())
+
+	}
+	var tokenResponse utility.TokenResponse
+	err = json.Unmarshal(body, &tokenResponse)
+	if err != nil {
+		fmt.Printf("responseJson has error %s", err.Error())
+
+	}
+
 }
