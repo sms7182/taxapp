@@ -16,9 +16,10 @@ create table if not exists tax_office_request_response_log
     id              bigserial    not null
     constraint tax_office_request_response_log_pkey
     primary key,
-    tax_raw_id      bigserial,
-    tax_process_id  bigserial,
+    tax_raw_id      bigint  null ,
+    tax_process_id  bigint null,
     api_name     text         not null,
+    request_unique_id text,
     logged_at       timestamp    not null,
     url             text         not null,
     status_code     int          not null,

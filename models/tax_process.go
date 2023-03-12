@@ -7,6 +7,8 @@ import (
 	"gorm.io/gorm"
 )
 
+type TaxStatus int
+
 const (
 	InProgress TaxStatus = iota
 	Retry

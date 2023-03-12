@@ -21,6 +21,7 @@ type KafkaServiceImpl struct {
 	Writer        *kafka.Writer
 	Repository    pkg.ClientRepository
 	Client        pkg.ClientLoggerExtension
+	TaxClient     pkg.TaxClient
 	Redis         pkg.RedisService
 	Url           string
 	TokenUrl      string
@@ -58,6 +59,13 @@ func (kpi KafkaServiceImpl) Consumer(message *messages.RawTransaction, err error
 	}
 	fmt.Println("id is %s", id)
 
+	serverInformation, err := kpi.TaxClient.GetServerInformation()
+	if err != nil {
+		fmt.Printf("GetServer information has error %s", err.Error())
+		return
+	}
+	fmt.Printf("Server information is %s", *serverInformation)
+
 	// normalize
 	requestToNormalize := utility.SignatureFirstTypeRequest{
 		Authorization:  "1234",
@@ -77,6 +85,7 @@ func (kpi KafkaServiceImpl) Consumer(message *messages.RawTransaction, err error
 		// notif to developer
 		fmt.Printf("normalize has error,%s", err.Error())
 	}
+
 	signature, err := utility.SignAndVerify(normalized)
 	if err != nil {
 		fmt.Printf("sign has error %s", err.Error())
@@ -185,54 +194,4 @@ func (ksi KafkaServiceImpl) get_token() (*string, error) {
 		return nil, err
 	}
 	return &tokenResponse.Token, nil
-}
-
-func (ksi KafkaServiceImpl) getServerList() string {
-	url := fmt.Sprintf(ksi.Url, ksi.ServerInfoUrl)
-	id, _ := uuid.NewV4()
-
-	bodyReq := utility.BodyReq{
-		Time: 2,
-		Packet: utility.Packet{
-			Uid:             id.String(),
-			PacketType:      "GET_SERVER_INFORMATION",
-			Retry:           false,
-			Data:            utility.TokenBody{},
-			EncryptionKeyId: "",
-			SymmetricKey:    "",
-			IV:              "",
-			FiscalId:        "",
-			DataSignature:   "",
-		},
-	}
-	marshaled, err := json.Marshal(bodyReq)
-	if err != nil {
-		fmt.Printf("has error create request")
-	}
-
-	jsonBytes := bytes.NewReader(marshaled)
-	request, err := http.NewRequest("POST", url, jsonBytes)
-	if err != nil {
-		fmt.Printf("Create Post request has error %s", err.Error())
-	}
-	request.Header.Set("requestTraceId", id.String())
-	request.Header.Set("timestampt", time.Now().String())
-	request.Header.Set("Content-Type", "application/json")
-	client := http.Client{
-		Timeout: 30 * time.Second,
-	}
-	resp, err := client.Do(request)
-	if err != nil {
-		fmt.Printf("response has error %s", err.Error())
-
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	var bodyObj utility.BodyResponse
-
-	if err != nil {
-		fmt.Printf("read response has error %s", err.Error())
-
-	}
-	json.Unmarshal(body, &bodyObj)
-	return bodyObj.Result.Data.PublicKeys[0].Key
 }

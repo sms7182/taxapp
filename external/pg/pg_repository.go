@@ -14,17 +14,18 @@ type RepositoryImpl struct {
 	DB *gorm.DB
 }
 
-func (repository RepositoryImpl) LogReqRes(taxRawId uint, taxProcessId uint, apiName string, url string, statusCode int, req string, res *string, errorMsg *string) error {
+func (repository RepositoryImpl) LogReqRes(taxRawId *uint, taxProcessId *uint, requestUniqueId string, apiName string, url string, statusCode int, req string, res *string, errorMsg *string) error {
 	taxOfficeRequest := models.TaxOfficeRequestResponseLogModel{
-		TaxRawId:     taxRawId,
-		TaxProcessId: taxProcessId,
-		ApiName:      apiName,
-		LoggedAt:     time.Now(),
-		Url:          url,
-		StatusCode:   statusCode,
-		Request:      req,
-		Response:     res,
-		ErrorMessage: errorMsg,
+		TaxRawId:       taxRawId,
+		TaxProcessId:   taxProcessId,
+		RequestUiqueId: requestUniqueId,
+		ApiName:        apiName,
+		LoggedAt:       time.Now(),
+		Url:            url,
+		StatusCode:     statusCode,
+		Request:        req,
+		Response:       res,
+		ErrorMessage:   errorMsg,
 	}
 	return repository.DB.Create(&taxOfficeRequest).Error
 }

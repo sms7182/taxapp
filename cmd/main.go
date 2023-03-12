@@ -9,6 +9,7 @@ import (
 	"tax-management/external/exkafka"
 	"tax-management/external/exkafka/messages"
 	"tax-management/external/gateway"
+	taxorganization "tax-management/external/gateway/tax_organization"
 	"tax-management/external/pg"
 	"tax-management/pkg"
 
@@ -46,7 +47,8 @@ func main() {
 	}
 	rdb := getActualRedisClient()
 	redisClient := getRedisClient(rdb)
-	kafkaService := kafkaConfiguration(repository, redisClient)
+	taxClient := taxClientConfiguration(repository, client)
+	kafkaService := kafkaConfiguration(repository, redisClient, taxClient)
 	controller := pkg.Controller{
 		Service:      service,
 		KafkaService: kafkaService,
@@ -56,7 +58,19 @@ func main() {
 
 	router.Run(viper.GetString("serverPort"))
 }
-func kafkaConfiguration(repository pg.RepositoryImpl, redis pg.RedisServiceImpl) exkafka.KafkaServiceImpl {
+
+func taxClientConfiguration(repository pg.RepositoryImpl, client gateway.ClientLoggerExtensionImpl) pkg.TaxClient {
+	url := viper.GetString("taxOrg.url")
+	serverUrl := viper.GetString("taxOrg.serverInformationUrl")
+	taxClient := taxorganization.ClientImpl{
+		Repository:           repository,
+		HttpClient:           client,
+		Url:                  url,
+		ServerInformationUrl: serverUrl,
+	}
+	return taxClient
+}
+func kafkaConfiguration(repository pg.RepositoryImpl, redis pg.RedisServiceImpl, client pkg.TaxClient) exkafka.KafkaServiceImpl {
 	topic := viper.GetString("kafka.topic")
 	bs := viper.GetString("kafka.urls")
 	writer := &kafka.Writer{
@@ -84,6 +98,7 @@ func kafkaConfiguration(repository pg.RepositoryImpl, redis pg.RedisServiceImpl)
 		ServerInfoUrl: viper.GetString("taxOrg.serverInformationUrl"),
 		Redis:         redis,
 		Repository:    repository,
+		TaxClient:     client,
 	}
 
 	go rawConsumer.Read(&messages.RawTransaction{}, func(rt *messages.RawTransaction, err error) {

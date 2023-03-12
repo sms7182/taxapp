@@ -7,8 +7,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type TaxStatus int
-
 type TaxRawDomain struct {
 	Id        uint         `gorm:"autoIncrement,primaryKey"`
 	CreatedAt time.Time    `gorm:"column:created_at"`
