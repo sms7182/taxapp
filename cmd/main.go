@@ -61,12 +61,14 @@ func main() {
 
 func taxClientConfiguration(repository pg.RepositoryImpl, client gateway.ClientLoggerExtensionImpl) pkg.TaxClient {
 	url := viper.GetString("taxOrg.url")
+	tokenUrl := viper.GetString("taxOrg.tokenUrl")
 	serverUrl := viper.GetString("taxOrg.serverInformationUrl")
 	taxClient := taxorganization.ClientImpl{
 		Repository:           repository,
 		HttpClient:           client,
 		Url:                  url,
 		ServerInformationUrl: serverUrl,
+		TokenUrl:             tokenUrl,
 	}
 	return taxClient
 }
