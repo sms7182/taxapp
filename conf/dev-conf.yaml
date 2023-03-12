@@ -1,6 +1,6 @@
 serverPort: ":9000"
-postgresSource: "host=192.168.88.101 user=pgsql dbname=notifications sslmode=disable password=Astronomiex1235"
-pgMigrationSource: "postgres://pgsql:Astronomiex1235@192.168.88.101:5432/notifications?sslmode=disable"
+postgresSource: "host=192.168.88.101 user=pgsql dbname=tax_management sslmode=disable password=Astronomiex1235"
+pgMigrationSource: "postgres://pgsql:Astronomiex1235@192.168.88.101:5432/tax_management?sslmode=disable"
 kafka:
   urls: "localhost:9092"
   topic: "dbz.warehouse.public.tax_dom_hotel_retail"

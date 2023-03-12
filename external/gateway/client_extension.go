@@ -12,7 +12,7 @@ type ClientLoggerExtensionImpl struct {
 	GatewayRepository pkg.ClientRepository
 }
 
-func (h ClientLoggerExtensionImpl) Do(requestTranceId string, signature string, packetType string, request *http.Request, gateway string) (*http.Response, error) {
+func (h ClientLoggerExtensionImpl) Do(taxRawId uint, taxProcessId uint, request *http.Request, apiname string) (*http.Response, error) {
 	requestBody := "{}"
 	if request.Body != nil {
 		reqBody, err := ioutil.ReadAll(request.Body)
@@ -27,9 +27,9 @@ func (h ClientLoggerExtensionImpl) Do(requestTranceId string, signature string, 
 	if err != nil {
 		msg := err.Error()
 		_ = h.GatewayRepository.LogReqRes(
-			requestTranceId,
-			signature,
-			packetType,
+			taxRawId,
+			taxProcessId,
+			apiname,
 			request.URL.String(),
 			-1,
 			requestBody,
@@ -42,9 +42,9 @@ func (h ClientLoggerExtensionImpl) Do(requestTranceId string, signature string, 
 	resStr := string(requestBody)
 	if resp.StatusCode == http.StatusOK {
 		_ = h.GatewayRepository.LogReqRes(
-			requestTranceId,
-			signature,
-			packetType,
+			taxRawId,
+			taxProcessId,
+			apiname,
 			request.URL.String(),
 			resp.StatusCode,
 			requestBody,
@@ -54,9 +54,9 @@ func (h ClientLoggerExtensionImpl) Do(requestTranceId string, signature string, 
 	} else {
 		errMsg := resp.Status
 		_ = h.GatewayRepository.LogReqRes(
-			requestTranceId,
-			signature,
-			packetType,
+			taxRawId,
+			taxProcessId,
+			apiname,
 			request.URL.String(),
 			resp.StatusCode,
 			requestBody,

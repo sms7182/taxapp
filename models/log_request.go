@@ -2,20 +2,19 @@ package models
 
 import "time"
 
-type LogRequestHistory struct {
+type TaxOfficeRequestResponseLogModel struct {
 	Id           uint      `gorm:"autoIncrement,primaryKey"`
-	TraceId      string    `gorm:"column:trace_id"`
-	Signature    string    `gorm:"column:signature"`
-	CreatedAt    time.Time `gorm:"column:created_at"`
-	UpdatedAt    time.Time `gorm:"column:updated_at"`
-	PacketType   string    `gorm:"column:packet_type"`
-	RequestUrl   string    `gorm:"column:request_url"`
+	TaxRawId     uint      `gorm:"column:tax_raw_id"`
+	TaxProcessId uint      `gorm:"column:tax_process_id"`
+	ApiName      string    `gorm:"column:api_name"`
+	LoggedAt     time.Time `gorm:"column:logged_at"`
+	Url          string    `gorm:"column:url"`
 	StatusCode   int       `gorm:"column:status_code"`
 	Request      string    `gorm:"column:request"`
 	Response     *string   `gorm:"column:response"`
 	ErrorMessage *string   `gorm:"column:error_message"`
 }
 
-func (LogRequestHistory) TableName() string {
-	return "log_request_history"
+func (TaxOfficeRequestResponseLogModel) TableName() string {
+	return "tax_office_request_response_log"
 }

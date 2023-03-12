@@ -1,5 +1,13 @@
 package messages
+// type history struct{
+// 	Id  uint
+// 	TaxUniqueId string
+// 	Status string
+// 	Type string
+// 	RefId uint
 
+
+// }
 type AfterData struct {
 	Taxid   string `json:"taxid"`
 	Tinb    string `json:"tinb"`
@@ -28,8 +36,8 @@ type AfterData struct {
 	Vra     int64  `json:"vra"`
 }
 type RawTransaction struct {
-	After       AfterData   `json:"after"`
-	Before      interface{} `json:"before"`
+	After AfterData `json:"after"`
+
 	Op          string      `json:"op"`
 	Source      SourceData  `json:"source"`
 	Transaction interface{} `json:"transaction"`

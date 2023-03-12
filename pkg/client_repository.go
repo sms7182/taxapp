@@ -6,6 +6,6 @@ import (
 )
 
 type ClientRepository interface {
-	LogReqRes(requestTraceId string, signature string, packetType string, url string, statusCode int, req string, res *string, errorMsg *string) error
+	LogReqRes(taxRawId uint, taxProcessId uint, apiName string, url string, statusCode int, req string, res *string, errorMsg *string) error
 	InsertTaxData(ctx context.Context, taxData messages.RawTransaction) (*string, error)
 }

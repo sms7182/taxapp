@@ -52,11 +52,38 @@ func (kpi KafkaServiceImpl) Consumer(message *messages.RawTransaction, err error
 
 	ctx := context.Background()
 
-	traceId, err := kpi.Repository.InsertTaxData(ctx, *message)
+	id, err := kpi.Repository.InsertTaxData(ctx, *message)
 	if err != nil {
 		fmt.Errorf("Insert raw taxData has error %s", err.Error())
 	}
-	fmt.Printf("traceid of tax is :%s", *traceId)
+	fmt.Println("id is %s", id)
+
+	// normalize
+	requestToNormalize := utility.SignatureFirstTypeRequest{
+		Authorization:  "1234",
+		RequestTraceId: "",
+		TimeStamp:      time.Now().String(),
+	}
+	pft := utility.PacketFirstType{
+		Uid:        "",
+		PacketType: "invoice",
+		Retry:      false,
+		Data:       message.After,
+	}
+	requestToNormalize.Packets = append(requestToNormalize.Packets, pft)
+	normalized, err := utility.Normalize(requestToNormalize)
+	if err != nil {
+		// update for retry has error in normalize
+		// notif to developer
+		fmt.Printf("normalize has error,%s", err.Error())
+	}
+	signature, err := utility.SignAndVerify(normalized)
+	if err != nil {
+		fmt.Printf("sign has error %s", err.Error())
+		// update for retry has error in normalize
+		// notif to developer
+	}
+	fmt.Printf("signature: %s", *signature)
 	// token, err := kpi.Redis.Get(ctx, getTokenKey())
 	// if err != nil {
 	// 	tokenResp, err := kpi.get_token()
