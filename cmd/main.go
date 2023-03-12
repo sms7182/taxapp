@@ -64,6 +64,7 @@ func taxClientConfiguration(repository pg.RepositoryImpl, client gateway.ClientL
 	tokenUrl := viper.GetString("taxOrg.tokenUrl")
 	serverUrl := viper.GetString("taxOrg.serverInformationUrl")
 	fisicalUrl := viper.GetString("taxOrg.fiscalInformationUrl")
+	inquiryByIdUrl := viper.GetString("taxOrg.inquiryByIDUrl")
 	taxClient := taxorganization.ClientImpl{
 		Repository:           repository,
 		HttpClient:           client,
@@ -71,6 +72,7 @@ func taxClientConfiguration(repository pg.RepositoryImpl, client gateway.ClientL
 		ServerInformationUrl: serverUrl,
 		TokenUrl:             tokenUrl,
 		FiscalInformationUrl: fisicalUrl,
+		InquiryByIdUrl:       inquiryByIdUrl,
 	}
 	return taxClient
 }

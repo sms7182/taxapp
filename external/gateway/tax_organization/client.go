@@ -20,10 +20,11 @@ const (
 	GetServerInformation TaxAPIType = iota
 	GetToken
 	GetFiscalInformation
+	InquiryByUId
 )
 
 func (ts TaxAPIType) String() string {
-	return []string{"GET_SERVER_INFORMATION", "GET_TOKEN", "GET_FISCAL_INFORMATION"}[ts]
+	return []string{"GET_SERVER_INFORMATION", "GET_TOKEN", "GET_FISCAL_INFORMATION", "INQUIRY_BY_UID"}[ts]
 }
 
 type ClientImpl struct {
@@ -32,6 +33,7 @@ type ClientImpl struct {
 	ServerInformationUrl string
 	TokenUrl             string
 	FiscalInformationUrl string
+	InquiryByIdUrl       string
 	Repository           pkg.ClientRepository
 	UserName             string
 }
@@ -262,8 +264,8 @@ func (client ClientImpl) GetFiscalInformation(token string) {
 		fmt.Printf("read response has error %s", err.Error())
 
 	}
-	var tokenResponse utility.TokenResponse
-	err = json.Unmarshal(body, &tokenResponse)
+	var fiscalInfoResponse utility.FiscalInformationResponse
+	err = json.Unmarshal(body, &fiscalInfoResponse)
 	if err != nil {
 		fmt.Printf("responseJson has error %s", err.Error())
 
