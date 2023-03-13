@@ -194,13 +194,11 @@ func (client ClientImpl) GetFiscalInformation(token string) {
 		RequestTraceId: rqId.String(),
 		TimeStamp:      tstr,
 		ContentType:    "application/json",
-		Packet: utility.Packet{
+		Packet: utility.FiscalInformationPacket{
 			Uid:        rqId.String(),
 			PacketType: GetFiscalInformation.String(),
 			Retry:      false,
-			Data: utility.TokenBody{
-				UserName: client.UserName,
-			},
+			Data:       nil,
 		},
 	}
 
