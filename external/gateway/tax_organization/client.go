@@ -196,7 +196,7 @@ func (client ClientImpl) GetFiscalInformation(token string) {
 		ContentType:    "application/json",
 		Packet: utility.Packet{
 			Uid:        rqId.String(),
-			PacketType: GetToken.String(),
+			PacketType: GetFiscalInformation.String(),
 			Retry:      false,
 			Data: utility.TokenBody{
 				UserName: client.UserName,
@@ -266,6 +266,96 @@ func (client ClientImpl) GetFiscalInformation(token string) {
 	}
 	var fiscalInfoResponse utility.FiscalInformationResponse
 	err = json.Unmarshal(body, &fiscalInfoResponse)
+	if err != nil {
+		fmt.Printf("responseJson has error %s", err.Error())
+
+	}
+
+}
+
+func (client ClientImpl) InquiryById(token string) {
+	url := client.Url + client.InquiryByIdUrl
+	rqId, _ := uuid.NewV4()
+	timeNow := time.Now().Unix()
+	tstr := strconv.FormatInt(timeNow, 10)
+
+	sPacketReq := utility.InquiryByIdRequest{
+		Authorization:  token,
+		RequestTraceId: rqId.String(),
+		TimeStamp:      tstr,
+		ContentType:    "application/json",
+		Packet: utility.Packet{
+			Uid:        rqId.String(),
+			PacketType: InquiryByUId.String(),
+			Retry:      false,
+			Data: utility.TokenBody{
+				UserName: client.UserName,
+			},
+		},
+	}
+
+	normalized, err := utility.Normalize(sPacketReq)
+	if err != nil {
+		// update for retry has error in normalize
+		// notif to developer
+		fmt.Printf("normalize has error,%s", err.Error())
+		return
+	}
+	signature, err := utility.SignAndVerify(normalized)
+	if err != nil {
+		fmt.Printf("sign has error %s", err.Error())
+		// update for retry has error in normalize
+		// notif to developer
+		return
+	}
+	postRequest := utility.PostDataRequest{
+		RequestTraceId: rqId.String(),
+		TimeStamp:      tstr,
+		ContentType:    "application/json",
+		Packet: utility.Packet{
+			Uid:        rqId.String(),
+			PacketType: InquiryByUId.String(),
+			Retry:      false,
+			Data: utility.TokenBody{
+				UserName: client.UserName,
+			},
+		},
+		Signature: signature,
+	}
+	jsonBytes, err := json.Marshal(postRequest)
+	if err != nil {
+		fmt.Printf("json marshal has error %s", err.Error())
+		return
+	}
+	reader := bytes.NewReader(jsonBytes)
+
+	request, err := http.NewRequest("POST", url, reader)
+
+	if err != nil {
+		fmt.Printf("response has error %s", err.Error())
+		return
+	}
+
+	request.Header.Set("requestTraceId", rqId.String())
+	request.Header.Set("timestamp", tstr)
+	request.Header.Set("Content-Type", "application/json")
+	resp, err := client.HttpClient.Do(nil, nil, rqId.String(), request, InquiryByUId.String())
+	if err != nil {
+		fmt.Printf("response has error %s", err.Error())
+
+	}
+
+	if err != nil {
+		fmt.Printf("response has error %s", err.Error())
+
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("read response has error %s", err.Error())
+
+	}
+	var inquiryResponse utility.InquiryByIdResponse
+	err = json.Unmarshal(body, &inquiryResponse)
 	if err != nil {
 		fmt.Printf("responseJson has error %s", err.Error())
 
