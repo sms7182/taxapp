@@ -28,15 +28,13 @@ type FiscalInformationRequest struct {
 }
 
 type FiscalInformationPacket struct {
-	Uid             string                 `json:"uid"`
-	PacketType      string                 `json:"packetType"`
-	Retry           bool                   `json:"retry"`
-	Data            *FiscalInformationData `json:"data"`
-	EncryptionKeyId string                 `json:"encryptionKeyId"`
-	SymmetricKey    string                 `json:"symmetricKey"`
-	IV              string                 `json:"iv"`
-	FiscalId        string                 `json:"fiscalId"`
-	DataSignature   string                 `json:"dataSignature"`
-}
-type FiscalInformationData struct {
+	Uid             string       `json:"uid"`
+	PacketType      string       `json:"packetType"`
+	Retry           bool         `json:"retry"`
+	Data            *interface{} `json:"data"`
+	EncryptionKeyId string       `json:"encryptionKeyId"`
+	SymmetricKey    string       `json:"symmetricKey"`
+	IV              string       `json:"iv"`
+	FiscalId        string       `json:"fiscalId"`
+	DataSignature   string       `json:"dataSignature"`
 }

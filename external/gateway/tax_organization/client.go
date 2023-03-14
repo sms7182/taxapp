@@ -282,15 +282,17 @@ func (client ClientImpl) InquiryById(token string) {
 		RequestTraceId: rqId.String(),
 		TimeStamp:      tstr,
 		ContentType:    "application/json",
-		Packet: utility.Packet{
+		Packet: utility.InquiryByIdPacket{
 			Uid:        rqId.String(),
 			PacketType: InquiryByUId.String(),
 			Retry:      false,
-			Data: utility.TokenBody{
-				UserName: client.UserName,
-			},
 		},
 	}
+	//todo complete this code
+	sPacketReq.Packet.Data = append(sPacketReq.Packet.Data, utility.InquiryByIdBody{
+		UId:      "",
+		FiscalId: "",
+	})
 
 	normalized, err := utility.Normalize(sPacketReq)
 	if err != nil {

@@ -2,12 +2,27 @@ package utility
 
 type InquiryByIdRequest struct {
 	Authorization  string
-	ContentType    string `json:"Content-Type"`
-	RequestTraceId string `json:"requestTraceId"`
-	TimeStamp      string `json:"timestamp"`
-	Packet         Packet `json:"packet"`
+	ContentType    string            `json:"Content-Type"`
+	RequestTraceId string            `json:"requestTraceId"`
+	TimeStamp      string            `json:"timestamp"`
+	Packet         InquiryByIdPacket `json:"packet"`
+}
+type InquiryByIdPacket struct {
+	Uid             string            `json:"uid"`
+	PacketType      string            `json:"packetType"`
+	Retry           bool              `json:"retry"`
+	Data            []InquiryByIdBody `json:"data"`
+	EncryptionKeyId string            `json:"encryptionKeyId"`
+	SymmetricKey    string            `json:"symmetricKey"`
+	IV              string            `json:"iv"`
+	FiscalId        string            `json:"fiscalId"`
+	DataSignature   string            `json:"dataSignature"`
 }
 
+type InquiryByIdBody struct {
+	UId      string `json:"uid"`
+	FiscalId string `json:"fiscalId"`
+}
 type InquiryByIdResponse struct {
 	UID        interface{} `json:"uid"`
 	PacketType string      `json:"packetType"`
