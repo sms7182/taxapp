@@ -24,7 +24,7 @@ func (cr Controller) health(c *gin.Context) {
 
 	cr.KafkaService.Publish(messages.RawTransaction{
 		After: messages.AfterData{
-			Trn:     13981512,
+			Trn:     "13981512",
 			Taxid:   "A118GE",
 			Indatim: 1677974399000000,
 			Inty:    2,

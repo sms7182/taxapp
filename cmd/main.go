@@ -25,6 +25,7 @@ import (
 	"github.com/segmentio/kafka-go"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -77,11 +78,17 @@ func taxClientConfiguration(repository pg.RepositoryImpl, client gateway.ClientL
 	return taxClient
 }
 func kafkaConfiguration(repository pg.RepositoryImpl, redis pg.RedisServiceImpl, client pkg.TaxClient) exkafka.KafkaServiceImpl {
-	topic := viper.GetString("kafka.topic")
-	bs := viper.GetString("kafka.urls")
+
+	var kafkaSetting KafkaSetting
+
+	err := viper.Unmarshal(&kafkaSetting)
+	if err != nil {
+		log.Fatalf("unable to decode into struct,%v", err)
+	}
+	bs := kafkaSetting.Kafka.Urls
 	writer := &kafka.Writer{
 		Addr:     kafka.TCP(bs),
-		Topic:    topic,
+		Topic:    kafkaSetting.Kafka.WriterTopic,
 		Balancer: &kafka.LeastBytes{},
 	}
 
@@ -89,12 +96,6 @@ func kafkaConfiguration(repository pg.RepositoryImpl, redis pg.RedisServiceImpl,
 		Timeout:   10 * time.Second,
 		DualStack: true,
 	}
-	rawConsumer := messages.Consumer[*messages.RawTransaction]{
-		Dialer:  dialer,
-		Topic:   topic,
-		Brokers: []string{bs},
-	}
-	rawConsumer.CreateConnection()
 
 	kafkaConf := exkafka.KafkaServiceImpl{
 
@@ -107,12 +108,22 @@ func kafkaConfiguration(repository pg.RepositoryImpl, redis pg.RedisServiceImpl,
 		TaxClient:     client,
 	}
 
-	go rawConsumer.Read(&messages.RawTransaction{}, func(rt *messages.RawTransaction, err error) {
-		if err != nil {
-			fmt.Println(err.Error())
+	for k, v := range kafkaSetting.Kafka.ConsumerTopics {
+		consumer := messages.Consumer[*messages.RawTransaction]{
+			Type:    k,
+			Dialer:  dialer,
+			Topic:   fmt.Sprintf("%s", v),
+			Brokers: []string{bs},
 		}
-		kafkaConf.Consumer(rt, err)
-	})
+		consumer.CreateConnection()
+		go consumer.Read(&messages.RawTransaction{}, func(rt *messages.RawTransaction, err error) {
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+			kafkaConf.Consumer(rt, consumer.Type, err)
+		})
+	}
+
 	return kafkaConf
 
 }
@@ -166,4 +177,12 @@ func getEnv(key, fallback string) string {
 		return value
 	}
 	return fallback
+}
+
+type KafkaSetting struct {
+	Kafka struct {
+		Urls           string                 `json:"urls"`
+		ConsumerTopics map[string]interface{} `json:"consumerTopics"`
+		WriterTopic    string                 `json:"writerTopic"`
+	}
 }

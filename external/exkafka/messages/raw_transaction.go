@@ -1,11 +1,11 @@
 package messages
+
 // type history struct{
 // 	Id  uint
 // 	TaxUniqueId string
 // 	Status string
 // 	Type string
 // 	RefId uint
-
 
 // }
 type AfterData struct {
@@ -29,7 +29,7 @@ type AfterData struct {
 	Tob     int64  `json:"tob"`
 	Todam   int64  `json:"todam"`
 	Tprdis  int64  `json:"tprdis"`
-	Trn     int64  `json:"trn"`
+	Trn     string `json:"trn"`
 	Tsstam  int64  `json:"tsstam"`
 	Tvam    int64  `json:"tvam"`
 	Vam     int64  `json:"vam"`

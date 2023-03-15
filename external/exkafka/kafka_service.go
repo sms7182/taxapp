@@ -38,15 +38,16 @@ func (kpi KafkaServiceImpl) Publish(msg messages.RawTransaction) error {
 	return err
 }
 
-func (kpi KafkaServiceImpl) Consumer(message *messages.RawTransaction, err error) {
-	fmt.Printf("receive message")
+func (kpi KafkaServiceImpl) Consumer(message *messages.RawTransaction, consumerType string, err error) {
+
+	fmt.Printf("receive message %s", consumerType)
 	if err != nil {
 		panic("receive message has error")
 	}
 
 	ctx := context.Background()
 
-	id, err := kpi.Repository.InsertTaxData(ctx, *message)
+	id, err := kpi.Repository.InsertTaxData(ctx, consumerType, *message)
 	if err != nil {
 		fmt.Errorf("Insert raw taxData has error %s", err.Error())
 	}

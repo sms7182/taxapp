@@ -3,7 +3,14 @@ postgresSource: "host=192.168.88.101 user=pgsql dbname=tax_management sslmode=di
 pgMigrationSource: "postgres://pgsql:Astronomiex1235@192.168.88.101:5432/tax_management?sslmode=disable"
 kafka:
   urls: "localhost:9092"
-  topic: "dbz.warehouse.public.tax_dom_hotel_retail"
+  writerTopic: "test_topic"
+  consumerTopics:
+    flight_cancellation: "dbz_.public.tax_dom_flight_free_cancellation" 
+    flight_market: "dbz_.public.tax_dom_flight_market_place"
+    flight_markup: "dbz_.public.tax_dom_flight_markup"
+    hotel_mp: "dbz_.public.tax_dom_hotel_mp"
+    hotel_ratail: "dbz_.public.tax_dom_hotel_retail"
+
   facility: "local-dev-tax"
 taxOrg:
   url: "https://tp.tax.gov.ir"
