@@ -248,20 +248,21 @@ func SignString(stringToBeSigned *string) ([]byte, error) {
 	h := sha256.New()
 	h.Write([]byte(data))
 	sum := h.Sum(nil)
-	private, err := ioutil.ReadFile("sign")
+	private, err := ioutil.ReadFile("sign.key")
+
 	if err != nil {
 		log.Print("read private key file has error")
 		return nil, err
 	}
 	privatePem, _ := pem.Decode(private)
-	if privatePem.Type != "RSA PRIVATE KEY" {
+	if privatePem.Type != "PRIVATE KEY" {
 		log.Print("RSA PrivateKey is of the wrong type")
 		return nil, err
 	}
 	var privatePemBytes []byte
 	privatePemBytes = privatePem.Bytes
 	var parsedKey interface{}
-	if parsedKey, err = x509.ParsePKCS1PrivateKey(privatePemBytes); err != nil {
+	if parsedKey, err = x509.ParsePKCS8PrivateKey(privatePemBytes); err != nil {
 
 		log.Printf("Unable to parse RSA private key, generating a temp one :%s", err.Error())
 		return nil, err

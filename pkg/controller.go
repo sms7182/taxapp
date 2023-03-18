@@ -12,12 +12,18 @@ import (
 type Controller struct {
 	Service      Service
 	KafkaService KafkaService
+	TaxClient    TaxClient
 }
 
 func (cr Controller) SetRoutes(e *gin.Engine) {
+	e.GET("/getToken", cr.getToken)
 	e.GET("/health", cr.health)
 	e.GET("/encrypt", cr.encryption)
 	e.GET("/decrypt", cr.decryption)
+}
+func (cr Controller) getToken(c *gin.Context) {
+	cr.TaxClient.GetToken()
+	c.JSON(http.StatusOK, gin.H{})
 }
 
 func (cr Controller) health(c *gin.Context) {

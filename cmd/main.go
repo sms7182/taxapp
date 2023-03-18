@@ -53,6 +53,7 @@ func main() {
 	controller := pkg.Controller{
 		Service:      service,
 		KafkaService: kafkaService,
+		TaxClient:    taxClient,
 	}
 	router := gin.New()
 	controller.SetRoutes(router)
@@ -66,6 +67,7 @@ func taxClientConfiguration(repository pg.RepositoryImpl, client gateway.ClientL
 	serverUrl := viper.GetString("taxOrg.serverInformationUrl")
 	fisicalUrl := viper.GetString("taxOrg.fiscalInformationUrl")
 	inquiryByIdUrl := viper.GetString("taxOrg.inquiryByIDUrl")
+	usr := viper.GetString("taxOrg.username")
 	taxClient := taxorganization.ClientImpl{
 		Repository:           repository,
 		HttpClient:           client,
@@ -74,6 +76,7 @@ func taxClientConfiguration(repository pg.RepositoryImpl, client gateway.ClientL
 		TokenUrl:             tokenUrl,
 		FiscalInformationUrl: fisicalUrl,
 		InquiryByIdUrl:       inquiryByIdUrl,
+		UserName:             usr,
 	}
 	return taxClient
 }
@@ -109,6 +112,7 @@ func kafkaConfiguration(repository pg.RepositoryImpl, redis pg.RedisServiceImpl,
 	}
 
 	for k, v := range kafkaSetting.Kafka.ConsumerTopics {
+
 		consumer := messages.Consumer[*messages.RawTransaction]{
 			Type:    k,
 			Dialer:  dialer,
@@ -122,6 +126,7 @@ func kafkaConfiguration(repository pg.RepositoryImpl, redis pg.RedisServiceImpl,
 			}
 			kafkaConf.Consumer(rt, consumer.Type, err)
 		})
+
 	}
 
 	return kafkaConf

@@ -8,11 +8,12 @@ type SignaturePacketRequest struct {
 	Packet         Packet `json:"packet"`
 }
 type PostDataRequest struct {
-	ContentType    string  `json:"Content-Type"`
-	RequestTraceId string  `json:"requestTraceId"`
-	TimeStamp      string  `json:"timestamp"`
-	Packet         Packet  `json:"packet"`
-	Signature      *string `json:"signature"`
+	// ContentType    string  `json:"Content-Type"`
+	// RequestTraceId string  `json:"requestTraceId"`
+	// TimeStamp      string  `json:"timestamp"`
+	Packet    Packet  `json:"packet"`
+	Signature *string `json:"signature"`
+	Time      int     `json:"time"`
 }
 type TestSignature struct {
 	Packet PacketTest `json:"packet"`
@@ -32,7 +33,7 @@ type BodyReq struct {
 	Packet Packet `json:"packet"`
 }
 type Packet struct {
-	Uid             string    `json:"uid"`
+	Uid             *string   `json:"uid"`
 	PacketType      string    `json:"packetType"`
 	Retry           bool      `json:"retry"`
 	Data            TokenBody `json:"data"`

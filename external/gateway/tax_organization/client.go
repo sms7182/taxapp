@@ -41,11 +41,12 @@ type ClientImpl struct {
 func (client ClientImpl) GetServerInformation() (*string, error) {
 	url := client.Url + client.ServerInformationUrl
 	id, _ := uuid.NewV4()
-
+	var stui string
+	stui = id.String()
 	bodyReq := utility.BodyReq{
 		Time: 2,
 		Packet: utility.Packet{
-			Uid:             id.String(),
+			Uid:             &stui,
 			PacketType:      GetServerInformation.String(),
 			Retry:           false,
 			Data:            utility.TokenBody{},
@@ -99,13 +100,15 @@ func (client ClientImpl) GetToken() (*utility.TokenResponse, error) {
 	rqId, _ := uuid.NewV4()
 	timeNow := time.Now().Unix()
 	tstr := strconv.FormatInt(timeNow, 10)
+	var stui string
+	stui = rqId.String()
 	sPacketReq := utility.SignaturePacketRequest{
 
 		RequestTraceId: rqId.String(),
 		TimeStamp:      tstr,
 		ContentType:    "application/json",
 		Packet: utility.Packet{
-			Uid:        rqId.String(),
+			Uid:        &stui,
 			PacketType: GetToken.String(),
 			Retry:      false,
 			Data: utility.TokenBody{
@@ -121,7 +124,7 @@ func (client ClientImpl) GetToken() (*utility.TokenResponse, error) {
 		fmt.Printf("normalize has error,%s", err.Error())
 		return nil, err
 	}
-	signature, err := utility.SignAndVerify(normalized)
+	signature, err := utility.Sign(*normalized) //utility.SignAndVerify(normalized)
 	if err != nil {
 		fmt.Printf("sign has error %s", err.Error())
 		// update for retry has error in normalize
@@ -129,11 +132,10 @@ func (client ClientImpl) GetToken() (*utility.TokenResponse, error) {
 		return nil, err
 	}
 	postRequest := utility.PostDataRequest{
-		RequestTraceId: rqId.String(),
-		TimeStamp:      tstr,
-		ContentType:    "application/json",
+
+		Time: 1,
 		Packet: utility.Packet{
-			Uid:        rqId.String(),
+			Uid:        nil,
 			PacketType: GetToken.String(),
 			Retry:      false,
 			Data: utility.TokenBody{
@@ -155,11 +157,11 @@ func (client ClientImpl) GetToken() (*utility.TokenResponse, error) {
 		fmt.Printf("response has error %s", err.Error())
 		return nil, err
 	}
-	traceId, _ := uuid.NewV4()
-	request.Header.Set("requestTraceId", traceId.String())
+	//traceId, _ := uuid.NewV4()
+	request.Header.Set("requestTraceId", rqId.String())
 	request.Header.Set("timestamp", tstr)
 	request.Header.Set("Content-Type", "application/json")
-	resp, err := client.HttpClient.Do(nil, nil, traceId.String(), request, GetToken.String())
+	resp, err := client.HttpClient.Do(nil, nil, rqId.String(), request, GetToken.String())
 	if err != nil {
 		fmt.Printf("response has error %s", err.Error())
 		return nil, err
@@ -216,12 +218,14 @@ func (client ClientImpl) GetFiscalInformation(token string) {
 		// notif to developer
 		return
 	}
+	var stui string
+	stui = rqId.String()
 	postRequest := utility.PostDataRequest{
-		RequestTraceId: rqId.String(),
-		TimeStamp:      tstr,
-		ContentType:    "application/json",
+		// RequestTraceId: rqId.String(),
+		// TimeStamp:      tstr,
+		// ContentType:    "application/json",
 		Packet: utility.Packet{
-			Uid:        rqId.String(),
+			Uid:        &stui,
 			PacketType: GetFiscalInformation.String(),
 			Retry:      false,
 			Data: utility.TokenBody{
@@ -308,12 +312,14 @@ func (client ClientImpl) InquiryById(token string) {
 		// notif to developer
 		return
 	}
+	var stui string
+	stui = rqId.String()
 	postRequest := utility.PostDataRequest{
-		RequestTraceId: rqId.String(),
-		TimeStamp:      tstr,
-		ContentType:    "application/json",
+		// RequestTraceId: rqId.String(),
+		// TimeStamp:      tstr,
+		// ContentType:    "application/json",
 		Packet: utility.Packet{
-			Uid:        rqId.String(),
+			Uid:        &stui,
 			PacketType: InquiryByUId.String(),
 			Retry:      false,
 			Data: utility.TokenBody{

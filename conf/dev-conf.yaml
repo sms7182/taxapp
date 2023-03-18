@@ -3,8 +3,9 @@ postgresSource: "host=192.168.88.101 user=pgsql dbname=tax_management sslmode=di
 pgMigrationSource: "postgres://pgsql:Astronomiex1235@192.168.88.101:5432/tax_management?sslmode=disable"
 kafka:
   urls: "localhost:9092"
-  writerTopic: "test_topic"
+  writerTopic: "token_test_topic"
   consumerTopics:
+    test_topic: "token_test_topic"
     flight_cancellation: "dbz_.public.tax_dom_flight_free_cancellation" 
     flight_market: "dbz_.public.tax_dom_flight_market_place"
     flight_markup: "dbz_.public.tax_dom_flight_markup"
@@ -13,7 +14,9 @@ kafka:
 
   facility: "local-dev-tax"
 taxOrg:
+  username: "A118GE"
   url: "https://tp.tax.gov.ir"
+  # tokenUrl: "/req/api/tsp/sync/GET_TOKEN"
   tokenUrl: "/req/api/self-tsp/sync/GET_TOKEN"
   serverInformationUrl: "/req/api/tsp/sync/GET_SERVER_INFORMATION"
   fiscalInformationUrl: "/req/api/tsp/sync/GET_FISCAL_INFORMATION"
