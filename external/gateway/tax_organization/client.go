@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"strconv"
 	cryptops "tax-management/cryptopts"
 	"tax-management/pkg"
@@ -44,8 +43,6 @@ func (ts TaxAPIType) String() string {
 func DefaultClientImpl() *ClientImpl {
 	return &ClientImpl{
 
-		//prvKey:     prvKey,
-		//pubKey:     pubKey,
 		normalizer: cryptops.NormalizeJsonObj,
 		signer:     cryptops.SignPKCS1v15,
 		encrypter:  cryptops.AesGCMNoPaddingEncrypt,
@@ -63,8 +60,8 @@ type ClientImpl struct {
 	UserName             string
 	Terminal             *terminal.Terminal
 	normalizer           func(map[string]interface{}) (string, error)
-	prvKey               *rsa.PrivateKey
-	pubKey               *rsa.PublicKey
+	PrvKey               *rsa.PrivateKey
+	PubKey               *rsa.PublicKey
 
 	signer func([]byte, *rsa.PrivateKey) ([]byte, error)
 
@@ -126,7 +123,7 @@ func (client ClientImpl) GetServerInformation() (*string, error) {
 	return &rs, nil
 }
 
-func (client ClientImpl) SendPacket(packet *types.RequestPacket, version string, headers map[string]string, encrypt, sign bool) (*types.SyncResponse, error) {
+func (client ClientImpl) SendPacket(packet *types.RequestPacket, version string, headers map[string]string, encrypt, sign bool, url string) (*types.SyncResponse, error) {
 
 	if packet == nil {
 		return nil, nil
@@ -151,7 +148,7 @@ func (client ClientImpl) SendPacket(packet *types.RequestPacket, version string,
 		return nil, err
 	}
 
-	requestSign, err := client.signer([]byte(normalizedForm), client.prvKey)
+	requestSign, err := client.signer([]byte(normalizedForm), client.PrvKey)
 	if err != nil {
 		return nil, err
 	}
@@ -167,14 +164,7 @@ func (client ClientImpl) SendPacket(packet *types.RequestPacket, version string,
 		return nil, err
 	}
 
-	u, err := url.Parse(client.Url)
-	if err != nil {
-		return nil, err
-	}
-
-	u.Path = u.Path + "/sync/" + version //path.Join(u.Path, filepath.Join("sync", version))
-
-	httpReq, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewReader(reqJsonBody))
+	httpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(reqJsonBody))
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +174,7 @@ func (client ClientImpl) SendPacket(packet *types.RequestPacket, version string,
 		httpReq.Header[k] = []string{v}
 	}
 
-	resp, err := http.DefaultClient.Do(httpReq)
+	resp, err := client.HttpClient.Do(nil, nil, packet.UID, httpReq, GetToken.String()) // http.DefaultClient.Do(httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -200,8 +190,8 @@ func (client ClientImpl) GetToken() (string, error) {
 	}{
 		Username: client.UserName,
 	}, "GET_TOKEN")
-
-	resp, err := client.SendPacket(packet, "GET_TOKEN", nil, false, false)
+	url := client.Url + client.TokenUrl
+	resp, err := client.SendPacket(packet, "GET_TOKEN", nil, false, false, url)
 	if err != nil {
 		return "", err
 	}
@@ -210,102 +200,6 @@ func (client ClientImpl) GetToken() (string, error) {
 	exp := time.UnixMilli(int64(resp.Result.Data["expiresIn"].(float64)))
 	fmt.Printf("fix for redis exp %v", exp)
 	return token, nil
-}
-
-func (client ClientImpl) FirstGetToken() (*utility.TokenResponse, error) {
-
-	url := client.Url + client.TokenUrl
-
-	rqId, _ := uuid.NewV4()
-
-	t := time.Now().UnixNano() / int64(time.Millisecond)
-	tstr := strconv.FormatInt(t, 10)
-	var stui string
-	stui = rqId.String()
-	sPacketReq := utility.SignaturePacketRequest{
-
-		RequestTraceId: tstr,
-		TimeStamp:      tstr,
-		Packet: utility.Packet{
-			Uid:        stui,
-			PacketType: GetToken.String(),
-			Retry:      false,
-			Data: utility.TokenBody{
-				UserName: client.UserName,
-			},
-			FiscalId: client.UserName,
-		},
-	}
-
-	normalized, err := utility.Normalize(sPacketReq)
-	// if err != nil {
-
-	// 	fmt.Printf("normalize has error,%s", err.Error())
-	// 	return nil, err
-	// }
-	//normalized := fmt.Sprintf("A11T1F#####A11T1F###GET_TOKEN#%s#false###%s#%s", tstr, tstr, stui)
-	signature, err := utility.Sign(*normalized)
-
-	if err != nil {
-		fmt.Printf("sign has error %s", err.Error())
-
-		return nil, err
-	}
-	postRequest := utility.PostDataRequest{
-
-		Packet: utility.Packet{
-			Uid:        stui,
-			PacketType: GetToken.String(),
-			Retry:      false,
-			Data: utility.TokenBody{
-				UserName: client.UserName,
-			},
-			FiscalId:      client.UserName,
-			IV:            "",
-			DataSignature: "",
-		},
-		Signature: signature,
-	}
-	jsonBytes, err := json.Marshal(postRequest)
-	if err != nil {
-		fmt.Printf("json marshal has error %s", err.Error())
-		return nil, err
-	}
-	reader := bytes.NewReader(jsonBytes)
-
-	request, err := http.NewRequest("POST", url, reader)
-
-	if err != nil {
-		fmt.Printf("response has error %s", err.Error())
-		return nil, err
-	}
-
-	request.Header.Set("requestTraceId", tstr)
-	request.Header.Set("timestamp", tstr)
-	request.Header.Set("Content-Type", "application/json")
-	resp, err := client.HttpClient.Do(nil, nil, rqId.String(), request, GetToken.String())
-	if err != nil {
-		fmt.Printf("response has error %s", err.Error())
-		return nil, err
-
-	}
-
-	if err != nil {
-		fmt.Printf("response has error %s", err.Error())
-		return nil, err
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Printf("read response has error %s", err.Error())
-		return nil, err
-	}
-	var tokenResponse utility.TokenResponse
-	err = json.Unmarshal(body, &tokenResponse)
-	if err != nil {
-		fmt.Printf("responseJson has error %s", err.Error())
-		return nil, err
-	}
-	return &tokenResponse, nil
 }
 
 func (client ClientImpl) GetFiscalInformation(token string) {
@@ -508,7 +402,7 @@ func (t *ClientImpl) signPacket(packet *types.RequestPacket) error {
 		return err
 	}
 
-	sig, err := t.signer([]byte(normalizedForm), t.prvKey)
+	sig, err := t.signer([]byte(normalizedForm), t.PrvKey)
 	if err != nil {
 		return err
 	}
@@ -557,4 +451,100 @@ func (t *ClientImpl) mergePacketAndHeaders(packet *types.RequestPacket, headers 
 	}
 
 	return result
+}
+
+func (client ClientImpl) FirstGetToken() (*utility.TokenResponse, error) {
+
+	url := client.Url + client.TokenUrl
+
+	rqId, _ := uuid.NewV4()
+
+	t := time.Now().UnixNano() / int64(time.Millisecond)
+	tstr := strconv.FormatInt(t, 10)
+	var stui string
+	stui = rqId.String()
+	sPacketReq := utility.SignaturePacketRequest{
+
+		RequestTraceId: tstr,
+		TimeStamp:      tstr,
+		Packet: utility.Packet{
+			Uid:        stui,
+			PacketType: GetToken.String(),
+			Retry:      false,
+			Data: utility.TokenBody{
+				UserName: client.UserName,
+			},
+			FiscalId: client.UserName,
+		},
+	}
+
+	normalized, err := utility.Normalize(sPacketReq)
+	// if err != nil {
+
+	// 	fmt.Printf("normalize has error,%s", err.Error())
+	// 	return nil, err
+	// }
+	//normalized := fmt.Sprintf("A11T1F#####A11T1F###GET_TOKEN#%s#false###%s#%s", tstr, tstr, stui)
+	signature, err := utility.Sign(*normalized)
+
+	if err != nil {
+		fmt.Printf("sign has error %s", err.Error())
+
+		return nil, err
+	}
+	postRequest := utility.PostDataRequest{
+
+		Packet: utility.Packet{
+			Uid:        stui,
+			PacketType: GetToken.String(),
+			Retry:      false,
+			Data: utility.TokenBody{
+				UserName: client.UserName,
+			},
+			FiscalId:      client.UserName,
+			IV:            "",
+			DataSignature: "",
+		},
+		Signature: signature,
+	}
+	jsonBytes, err := json.Marshal(postRequest)
+	if err != nil {
+		fmt.Printf("json marshal has error %s", err.Error())
+		return nil, err
+	}
+	reader := bytes.NewReader(jsonBytes)
+
+	request, err := http.NewRequest("POST", url, reader)
+
+	if err != nil {
+		fmt.Printf("response has error %s", err.Error())
+		return nil, err
+	}
+
+	request.Header.Set("requestTraceId", tstr)
+	request.Header.Set("timestamp", tstr)
+	request.Header.Set("Content-Type", "application/json")
+	resp, err := client.HttpClient.Do(nil, nil, rqId.String(), request, GetToken.String())
+	if err != nil {
+		fmt.Printf("response has error %s", err.Error())
+		return nil, err
+
+	}
+
+	if err != nil {
+		fmt.Printf("response has error %s", err.Error())
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("read response has error %s", err.Error())
+		return nil, err
+	}
+	var tokenResponse utility.TokenResponse
+	err = json.Unmarshal(body, &tokenResponse)
+	if err != nil {
+		fmt.Printf("responseJson has error %s", err.Error())
+		return nil, err
+	}
+	return &tokenResponse, nil
 }

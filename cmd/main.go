@@ -52,6 +52,7 @@ func main() {
 	}
 	rdb := getActualRedisClient()
 	redisClient := getRedisClient(rdb)
+
 	terminal, err := terminal2.New(types.TerminalOptions{
 		PrivatePemPath:           "sign.key",
 		TerminalPublicKeyPemPath: "sign.pub",
@@ -80,18 +81,38 @@ func taxClientConfiguration(repository pg.RepositoryImpl, client gateway.ClientL
 	fisicalUrl := viper.GetString("taxOrg.fiscalInformationUrl")
 	inquiryByIdUrl := viper.GetString("taxOrg.inquiryByIDUrl")
 	usr := viper.GetString("taxOrg.username")
-	taxClient := taxorganization.ClientImpl{
-		Repository:           repository,
-		HttpClient:           client,
-		Url:                  url,
-		ServerInformationUrl: serverUrl,
-		TokenUrl:             tokenUrl,
-		FiscalInformationUrl: fisicalUrl,
-		InquiryByIdUrl:       inquiryByIdUrl,
-		UserName:             usr,
-		Terminal:             &terminal,
+	private, public, err := getPrivateKey("sign.key")
+	if err != nil {
+		log.Fatal(err)
 	}
-	taxorganization.DefaultClientImpl()
+	taxClient := taxorganization.DefaultClientImpl()
+
+	taxClient.Repository = repository
+	taxClient.HttpClient = client
+	taxClient.Url = url
+	taxClient.ServerInformationUrl = serverUrl
+	taxClient.TokenUrl = tokenUrl
+	taxClient.FiscalInformationUrl = fisicalUrl
+	taxClient.InquiryByIdUrl = inquiryByIdUrl
+	taxClient.UserName = usr
+	taxClient.Terminal = &terminal
+	taxClient.PrvKey = private
+	taxClient.PubKey = public
+
+	// taxClient := taxorganization.ClientImpl{
+	// 	Repository:           repository,
+	// 	HttpClient:           client,
+	// 	Url:                  url,
+	// 	ServerInformationUrl: serverUrl,
+	// 	TokenUrl:             tokenUrl,
+	// 	FiscalInformationUrl: fisicalUrl,
+	// 	InquiryByIdUrl:       inquiryByIdUrl,
+	// 	UserName:             usr,
+	// 	Terminal:             &terminal,
+	// 	PrvKey:               private,
+	// 	PubKey:               public,
+	// }
+
 	return taxClient
 }
 

@@ -2,10 +2,7 @@ package pkg
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
-	terminal2 "tax-management/terminal"
-	"tax-management/types"
 	"tax-management/utility"
 
 	"github.com/gin-gonic/gin"
@@ -28,19 +25,7 @@ func (cr Controller) getToken(c *gin.Context) {
 	if e != nil {
 		c.JSON(http.StatusBadGateway, e)
 	}
-	terminal, err := terminal2.New(types.TerminalOptions{
-		PrivatePemPath:           "sign.key",
-		TerminalPublicKeyPemPath: "sign.pub",
-		ClientID:                 "A11T1F",
-	})
-	if err != nil {
-		log.Fatal(err)
-	}
-	t, err = terminal.GetToken()
 
-	if err != nil {
-		log.Fatal(err)
-	}
 	c.JSON(http.StatusOK, t)
 }
 
