@@ -1,13 +1,5 @@
-package messages
+package external
 
-// type history struct{
-// 	Id  uint
-// 	TaxUniqueId string
-// 	Status string
-// 	Type string
-// 	RefId uint
-
-// }
 type AfterData struct {
 	Taxid   string `json:"taxid"`
 	Tinb    string `json:"tinb"`
@@ -35,15 +27,6 @@ type AfterData struct {
 	Vam     int64  `json:"vam"`
 	Vra     int64  `json:"vra"`
 }
-type RawTransaction struct {
-	After AfterData `json:"after"`
-
-	Op          string      `json:"op"`
-	Source      SourceData  `json:"source"`
-	Transaction interface{} `json:"transaction"`
-	TsMs        int64       `json:"ts_ms"`
-}
-
 type SourceData struct {
 	Connector string      `json:"connector"`
 	DB        string      `json:"db"`
@@ -57,4 +40,12 @@ type SourceData struct {
 	TxID      int64       `json:"txId"`
 	Version   string      `json:"version"`
 	Xmin      interface{} `json:"xmin"`
+}
+
+type RawTransaction struct {
+	After       AfterData   `json:"after"`
+	Op          string      `json:"op"`
+	Source      SourceData  `json:"source"`
+	Transaction interface{} `json:"transaction"`
+	TsMs        int64       `json:"ts_ms"`
 }

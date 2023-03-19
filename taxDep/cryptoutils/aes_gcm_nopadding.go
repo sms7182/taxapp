@@ -1,4 +1,4 @@
-package cryptops
+package cryptoutils
 
 import (
 	"crypto/aes"
@@ -9,7 +9,7 @@ import (
 
 // AesGCMNoPaddingEncrypt encrypts given plain data with AES/GCM/No-PADDING algorithm
 // and returns cipher plus and nonce/IV
-func AesGCMNoPaddingEncrypt(plainData, key []byte) (cipherData, nonce []byte, err error) {
+func AesGCMNoPaddingEncrypt(plainData, key []byte, nonceSize int) (cipherData, nonce []byte, err error) {
 	// AES cipher with key
 	blockCipher, err := aes.NewCipher(key)
 	if err != nil {
@@ -17,7 +17,7 @@ func AesGCMNoPaddingEncrypt(plainData, key []byte) (cipherData, nonce []byte, er
 	}
 
 	// creating GCM block cipher
-	gcm, err := cipher.NewGCM(blockCipher)
+	gcm, err := cipher.NewGCMWithNonceSize(blockCipher, nonceSize)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -31,6 +31,21 @@ func AesGCMNoPaddingEncrypt(plainData, key []byte) (cipherData, nonce []byte, er
 
 	cipherData = gcm.Seal(nil, nonce, plainData, nil)
 	return
+}
+
+func AesGCMNoPaddingEncryptWithNonce(plainData, key, nonce []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	// creating GCM block cipher
+	gcm, err := cipher.NewGCMWithNonceSize(block, len(nonce))
+	if err != nil {
+		return nil, err
+	}
+
+	return gcm.Seal(nil, nonce, plainData, nil), nil
 }
 
 func GCMKeyNonceGenerator(keyByteLength uint) ([]byte, []byte, error) {

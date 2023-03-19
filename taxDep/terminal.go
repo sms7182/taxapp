@@ -6,26 +6,32 @@ import (
 	"encoding/pem"
 	"errors"
 	"os"
-
-	"tax-management/transfer"
-	"tax-management/types"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
+	"tax-management/taxDep/transfer"
+	"tax-management/taxDep/types"
 )
 
 type Terminal struct {
 	PrivateKey  *rsa.PrivateKey
 	PublicKey   *rsa.PublicKey
-	TransferAPI *transfer.Transfer
+	transferAPI *transfer.Transfer
 
 	token    string
 	clientID string
 	exp      time.Time
+	mtx      sync.Mutex
 }
 
 func New(opt types.TerminalOptions) (*Terminal, error) {
-	prv, pub, err := getPrivateKey(opt.PrivatePemPath)
+	prv, pub, err := getPrivateKey(opt.KitchenPrivatePemPath)
+	if err != nil {
+		return nil, err
+	}
+
+	tr, err := transfer.NewApiTransfer(transfer.DefaultAPIConfig(prv, pub, opt.ClientID, opt.TerminalBaseURl))
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +40,7 @@ func New(opt types.TerminalOptions) (*Terminal, error) {
 		PrivateKey:  prv,
 		PublicKey:   pub,
 		clientID:    opt.ClientID,
-		TransferAPI: transfer.NewApiTransfer(transfer.DefaultAPIConfig(prv, pub)),
+		transferAPI: tr,
 	}, nil
 }
 
@@ -59,7 +65,7 @@ func getPrivateKey(pvPath string) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	return privateKey, &privateKey.PublicKey, nil
 }
 
-func (t *Terminal) BuildRequestPacket(data any, packetType string) *types.RequestPacket {
+func (t *Terminal) buildRequestPacket(data any, packetType string) *types.RequestPacket {
 	uid := uuid.NewString()
 	return &types.RequestPacket{
 		UID:        uid,

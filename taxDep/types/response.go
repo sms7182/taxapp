@@ -22,15 +22,17 @@ type AsyncResponsePacket struct {
 }
 
 type Response[T any] struct {
-	Timestamp int64           `json:"timestamp"`
-	Result    T               `json:"result"`
-	Errors    []ErrorResponse `json:"errors"`
+	Timestamp      int64           `json:"timestamp"`
+	Result         T               `json:"result"`
+	Errors         []ErrorResponse `json:"errors"`
+	HttpStatusCode int             `json:"-"`
 }
 
 type ResponseList[T any] struct {
-	Timestamp int64           `json:"timestamp"`
-	Result    []T             `json:"result"`
-	Errors    []ErrorResponse `json:"errors"`
+	Timestamp      int64           `json:"timestamp"`
+	Result         []T             `json:"result"`
+	Errors         []ErrorResponse `json:"errors"`
+	HttpStatusCode int             `json:"-"`
 }
 
 type (

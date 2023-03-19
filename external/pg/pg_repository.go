@@ -2,12 +2,11 @@ package pg
 
 import (
 	"context"
-	"tax-management/external/exkafka/messages"
-	"tax-management/models"
-	"time"
-
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"tax-management/external"
+	models2 "tax-management/external/pg/models"
+	"time"
 )
 
 type RepositoryImpl struct {
@@ -15,7 +14,7 @@ type RepositoryImpl struct {
 }
 
 func (repository RepositoryImpl) LogReqRes(taxRawId *uint, taxProcessId *uint, requestUniqueId string, apiName string, url string, statusCode int, req string, res *string, errorMsg *string) error {
-	taxOfficeRequest := models.TaxOfficeRequestResponseLogModel{
+	taxOfficeRequest := models2.TaxOfficeRequestResponseLogModel{
 		TaxRawId:       taxRawId,
 		TaxProcessId:   taxProcessId,
 		RequestUiqueId: requestUniqueId,
@@ -30,8 +29,8 @@ func (repository RepositoryImpl) LogReqRes(taxRawId *uint, taxProcessId *uint, r
 	return repository.DB.Create(&taxOfficeRequest).Error
 }
 
-func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType string, taxData messages.RawTransaction) (*string, error) {
-	tax := models.TaxRawDomain{
+func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType string, taxData external.RawTransaction) (*string, error) {
+	tax := models2.TaxRawDomain{
 		TaxType:  rawType,
 		UniqueId: taxData.After.Trn + "-" + rawType,
 	}
@@ -57,8 +56,8 @@ func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType stri
 	return taxUniqId, nil
 
 }
-func toTaxProcess(tax models.TaxRawDomain, rawType string) models.TaxProcess {
-	taxP := models.TaxProcess{
+func toTaxProcess(tax models2.TaxRawDomain, rawType string) models2.TaxProcess {
+	taxP := models2.TaxProcess{
 		TaxType:  rawType,
 		TaxRawId: tax.Id,
 	}

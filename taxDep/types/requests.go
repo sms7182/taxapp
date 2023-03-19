@@ -6,6 +6,8 @@ type SyncReq struct {
 }
 
 type AsyncReq struct {
+	SignedPacket
+	Packets []RequestPacket `json:"packets"`
 }
 
 type SignedPacket struct {

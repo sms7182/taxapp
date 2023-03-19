@@ -1,4 +1,4 @@
-package cryptops
+package cryptoutils
 
 import (
 	"encoding/json"
