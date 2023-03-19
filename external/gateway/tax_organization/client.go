@@ -119,13 +119,14 @@ func (client ClientImpl) GetToken() (*utility.TokenResponse, error) {
 	}
 
 	normalized, err := utility.Normalize(sPacketReq)
-	// if err != nil {
+	if err != nil {
 
-	// 	fmt.Printf("normalize has error,%s", err.Error())
-	// 	return nil, err
-	// }
+		fmt.Printf("normalize has error,%s", err.Error())
+		return nil, err
+	}
 	//normalized := fmt.Sprintf("A11T1F#####A11T1F###GET_TOKEN#%s#false###%s#%s", tstr, tstr, stui)
-	signature, err := utility.Sign(*normalized) //utility.SignAndVerify(normalized)
+	signature, err := utility.SignAndVerify(normalized) //utility.Sign(*normalized)
+
 	if err != nil {
 		fmt.Printf("sign has error %s", err.Error())
 
@@ -159,7 +160,7 @@ func (client ClientImpl) GetToken() (*utility.TokenResponse, error) {
 		fmt.Printf("response has error %s", err.Error())
 		return nil, err
 	}
-	//traceId, _ := uuid.NewV4()
+
 	request.Header.Set("requestTraceId", tstr)
 	request.Header.Set("timestamp", tstr)
 	request.Header.Set("Content-Type", "application/json")
