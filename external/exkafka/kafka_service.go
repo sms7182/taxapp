@@ -52,7 +52,8 @@ func (kpi KafkaServiceImpl) Consumer(message *messages.RawTransaction, consumerT
 		fmt.Errorf("Insert raw taxData has error %s", err.Error())
 	}
 	fmt.Printf("id is %s", id)
-	token, err := kpi.Terminal.GetToken()
-	fmt.Printf("token is %s", token)
+	//token, err := kpi.TaxClient.GetToken()
+	kpi.TaxClient.SendInvoice(*message)
+	//	fmt.Printf("token is %s", token)
 
 }

@@ -80,6 +80,7 @@ func taxClientConfiguration(repository pg.RepositoryImpl, client gateway.ClientL
 	serverUrl := viper.GetString("taxOrg.serverInformationUrl")
 	fisicalUrl := viper.GetString("taxOrg.fiscalInformationUrl")
 	inquiryByIdUrl := viper.GetString("taxOrg.inquiryByIDUrl")
+	fastEnqueueUrl := viper.GetString("taxOrg.sendInvoiceUrl")
 	usr := viper.GetString("taxOrg.username")
 	private, public, err := getPrivateKey("sign.key")
 	if err != nil {
@@ -94,6 +95,7 @@ func taxClientConfiguration(repository pg.RepositoryImpl, client gateway.ClientL
 	taxClient.TokenUrl = tokenUrl
 	taxClient.FiscalInformationUrl = fisicalUrl
 	taxClient.InquiryByIdUrl = inquiryByIdUrl
+	taxClient.SendInvoicUrl = fastEnqueueUrl
 	taxClient.UserName = usr
 	taxClient.Terminal = &terminal
 	taxClient.PrvKey = private

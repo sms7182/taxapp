@@ -22,6 +22,7 @@ taxOrg:
   serverInformationUrl: "/req/api/tsp/sync/GET_SERVER_INFORMATION"
   fiscalInformationUrl: "/req/api/tsp/sync/GET_FISCAL_INFORMATION"
   inquiryByIDUrl: "/req/api/tsp/sync/INQUIRY_BY_UID"
+  sendInvoiceUrl: "/req/api/tsp/sync/fast-enqueue"
 
 redis:
   url: "192.168.88.108:6379"

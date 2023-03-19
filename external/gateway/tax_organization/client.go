@@ -9,9 +9,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
 	cryptops "tax-management/cryptopts"
+	"tax-management/external/exkafka/messages"
 	"tax-management/pkg"
 	"tax-management/terminal"
 	"tax-management/types"
@@ -33,11 +35,12 @@ const (
 	GetServerInformation TaxAPIType = iota
 	GetToken
 	GetFiscalInformation
+	SendInvoice
 	InquiryByUId
 )
 
 func (ts TaxAPIType) String() string {
-	return []string{"GET_SERVER_INFORMATION", "GET_TOKEN", "GET_FISCAL_INFORMATION", "INQUIRY_BY_UID"}[ts]
+	return []string{"GET_SERVER_INFORMATION", "GET_TOKEN", "GET_FISCAL_INFORMATION", "INVOICE.V01", "INQUIRY_BY_UID"}[ts]
 }
 
 func DefaultClientImpl() *ClientImpl {
@@ -56,6 +59,7 @@ type ClientImpl struct {
 	TokenUrl             string
 	FiscalInformationUrl string
 	InquiryByIdUrl       string
+	SendInvoicUrl        string
 	Repository           pkg.ClientRepository
 	UserName             string
 	Terminal             *terminal.Terminal
@@ -174,7 +178,7 @@ func (client ClientImpl) SendPacket(packet *types.RequestPacket, version string,
 		httpReq.Header[k] = []string{v}
 	}
 
-	resp, err := client.HttpClient.Do(nil, nil, packet.UID, httpReq, GetToken.String()) // http.DefaultClient.Do(httpReq)
+	resp, err := client.HttpClient.Do(nil, nil, packet.UID, httpReq, version) // http.DefaultClient.Do(httpReq)
 	if err != nil {
 		return nil, err
 	}
@@ -383,6 +387,24 @@ func (client ClientImpl) InquiryById(token string) {
 
 	}
 
+}
+
+func (client ClientImpl) SendInvoice(rawdata messages.RawTransaction) {
+	t := client.Terminal
+	packet := t.BuildRequestPacket(rawdata.After, SendInvoice.String())
+	url := client.Url + client.SendInvoicUrl
+	token, err := client.GetToken()
+	if err != nil {
+		log.Fatal("token has error %s", err)
+	}
+	headers := make(map[string]string)
+	headers["Authorization"] = "Bearer " + token
+	resp, err := client.SendPacket(packet, SendInvoice.String(), headers, true, true, url)
+	if err != nil {
+
+	}
+
+	fmt.Println(resp)
 }
 
 func (t *ClientImpl) fillEssentialHeader(headers map[string]string) {
