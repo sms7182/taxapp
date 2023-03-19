@@ -2,6 +2,7 @@ package taxorganization
 
 import (
 	"bytes"
+	"context"
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/base64"
@@ -27,8 +28,9 @@ import (
 type TaxAPIType int
 
 const (
-	RequestTraceIDHeader = "requestTraceId"
-	TimestampHeader      = "timestamp"
+	RequestTraceIDHeader   = "requestTraceId"
+	TimestampHeader        = "timestamp"
+	GetTokenRedisKeyPrefix = "tax-management-redis-key-prefix"
 )
 
 const (
@@ -66,6 +68,7 @@ type ClientImpl struct {
 	normalizer           func(map[string]interface{}) (string, error)
 	PrvKey               *rsa.PrivateKey
 	PubKey               *rsa.PublicKey
+	RedisClient          pkg.RedisService
 
 	signer func([]byte, *rsa.PrivateKey) ([]byte, error)
 
@@ -187,22 +190,29 @@ func (client ClientImpl) SendPacket(packet *types.RequestPacket, version string,
 
 	return sr, json.NewDecoder(resp.Body).Decode(sr)
 }
+
 func (client ClientImpl) GetToken() (string, error) {
-	t := client.Terminal
-	packet := t.BuildRequestPacket(struct {
-		Username string `json:"username"`
-	}{
-		Username: client.UserName,
-	}, "GET_TOKEN")
-	url := client.Url + client.TokenUrl
-	resp, err := client.SendPacket(packet, "GET_TOKEN", nil, false, false, url)
+	ctx := context.Background()
+	token, err := client.RedisClient.Get(ctx, GetTokenRedisKeyPrefix)
 	if err != nil {
-		return "", err
+		t := client.Terminal
+		packet := t.BuildRequestPacket(struct {
+			Username string `json:"username"`
+		}{
+			Username: client.UserName,
+		}, "GET_TOKEN")
+		url := client.Url + client.TokenUrl
+		resp, err := client.SendPacket(packet, "GET_TOKEN", nil, false, false, url)
+		if err != nil {
+			return "", err
+		}
+		fmt.Println(resp)
+		token := (*resp).Result.Data["token"].(string)
+		exp := time.UnixMilli(int64(resp.Result.Data["expiresIn"].(float64)))
+		_ = client.RedisClient.Set(ctx, GetTokenRedisKeyPrefix, token, exp.Sub(time.Now()))
+		fmt.Printf("fix for redis exp %v", exp)
+		return token, nil
 	}
-	fmt.Println(resp)
-	token := (*resp).Result.Data["token"].(string)
-	exp := time.UnixMilli(int64(resp.Result.Data["expiresIn"].(float64)))
-	fmt.Printf("fix for redis exp %v", exp)
 	return token, nil
 }
 
@@ -418,13 +428,13 @@ func (t *ClientImpl) fillEssentialHeader(headers map[string]string) {
 	}
 }
 
-func (t *ClientImpl) signPacket(packet *types.RequestPacket) error {
-	normalizedForm, err := t.normalizer(packet.GetDataJSONMap())
+func (client *ClientImpl) signPacket(packet *types.RequestPacket) error {
+	normalizedForm, err := client.normalizer(packet.GetDataJSONMap())
 	if err != nil {
 		return err
 	}
 
-	sig, err := t.signer([]byte(normalizedForm), t.PrvKey)
+	sig, err := client.signer([]byte(normalizedForm), client.PrvKey)
 	if err != nil {
 		return err
 	}
@@ -433,7 +443,7 @@ func (t *ClientImpl) signPacket(packet *types.RequestPacket) error {
 	return nil
 }
 
-func (t *ClientImpl) encryptPacket(packet *types.RequestPacket) error {
+func (client *ClientImpl) encryptPacket(packet *types.RequestPacket) error {
 	key := make([]byte, 32)
 	rand.Read(key)
 
@@ -443,7 +453,7 @@ func (t *ClientImpl) encryptPacket(packet *types.RequestPacket) error {
 		return err
 	}
 
-	cipherData, nonce, err := t.encrypter(t.xorBytes(jsonBytes, key), key)
+	cipherData, nonce, err := client.encrypter(client.xorBytes(jsonBytes, key), key)
 	if err != nil {
 		return err
 	}
@@ -454,7 +464,7 @@ func (t *ClientImpl) encryptPacket(packet *types.RequestPacket) error {
 	return nil
 }
 
-func (t *ClientImpl) xorBytes(a, b []byte) []byte {
+func (client *ClientImpl) xorBytes(a, b []byte) []byte {
 	if len(b) > len(a) {
 		a, b = b, a
 	}
@@ -465,7 +475,7 @@ func (t *ClientImpl) xorBytes(a, b []byte) []byte {
 	return c
 }
 
-func (t *ClientImpl) mergePacketAndHeaders(packet *types.RequestPacket, headers map[string]string) map[string]interface{} {
+func (client *ClientImpl) mergePacketAndHeaders(packet *types.RequestPacket, headers map[string]string) map[string]interface{} {
 	result := packet.GetJSONMap()
 
 	for k, v := range headers {

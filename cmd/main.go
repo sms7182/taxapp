@@ -61,7 +61,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	taxClient := taxClientConfiguration(repository, client, *terminal)
+	taxClient := taxClientConfiguration(repository, client, *terminal, redisClient)
 	kafkaService := kafkaConfiguration(repository, redisClient, taxClient, *terminal)
 	controller := pkg.Controller{
 		Service:      service,
@@ -74,7 +74,7 @@ func main() {
 	router.Run(viper.GetString("serverPort"))
 }
 
-func taxClientConfiguration(repository pg.RepositoryImpl, client gateway.ClientLoggerExtensionImpl, terminal terminal2.Terminal) pkg.TaxClient {
+func taxClientConfiguration(repository pg.RepositoryImpl, client gateway.ClientLoggerExtensionImpl, terminal terminal2.Terminal, redis pkg.RedisService) pkg.TaxClient {
 	url := viper.GetString("taxOrg.url")
 	tokenUrl := viper.GetString("taxOrg.tokenUrl")
 	serverUrl := viper.GetString("taxOrg.serverInformationUrl")
@@ -100,6 +100,7 @@ func taxClientConfiguration(repository pg.RepositoryImpl, client gateway.ClientL
 	taxClient.Terminal = &terminal
 	taxClient.PrvKey = private
 	taxClient.PubKey = public
+	taxClient.RedisClient = redis
 
 	// taxClient := taxorganization.ClientImpl{
 	// 	Repository:           repository,
