@@ -46,7 +46,7 @@ func (client ClientImpl) GetServerInformation() (*string, error) {
 	bodyReq := utility.BodyReq{
 		Time: 2,
 		Packet: utility.Packet{
-			Uid:             &stui,
+			Uid:             stui,
 			PacketType:      GetServerInformation.String(),
 			Retry:           false,
 			Data:            utility.TokenBody{},
@@ -98,49 +98,51 @@ func (client ClientImpl) GetToken() (*utility.TokenResponse, error) {
 	url := client.Url + client.TokenUrl
 
 	rqId, _ := uuid.NewV4()
-	timeNow := time.Now().Unix()
-	tstr := strconv.FormatInt(timeNow, 10)
+
+	t := time.Now().UnixNano() / int64(time.Millisecond)
+	tstr := strconv.FormatInt(t, 10)
 	var stui string
 	stui = rqId.String()
 	sPacketReq := utility.SignaturePacketRequest{
 
-		RequestTraceId: rqId.String(),
+		RequestTraceId: tstr,
 		TimeStamp:      tstr,
-		ContentType:    "application/json",
 		Packet: utility.Packet{
-			Uid:        &stui,
+			Uid:        stui,
 			PacketType: GetToken.String(),
 			Retry:      false,
 			Data: utility.TokenBody{
 				UserName: client.UserName,
 			},
+			FiscalId: client.UserName,
 		},
 	}
 
 	normalized, err := utility.Normalize(sPacketReq)
-	if err != nil {
-		// update for retry has error in normalize
-		// notif to developer
-		fmt.Printf("normalize has error,%s", err.Error())
-		return nil, err
-	}
+	// if err != nil {
+
+	// 	fmt.Printf("normalize has error,%s", err.Error())
+	// 	return nil, err
+	// }
+	//normalized := fmt.Sprintf("A11T1F#####A11T1F###GET_TOKEN#%s#false###%s#%s", tstr, tstr, stui)
 	signature, err := utility.Sign(*normalized) //utility.SignAndVerify(normalized)
 	if err != nil {
 		fmt.Printf("sign has error %s", err.Error())
-		// update for retry has error in normalize
-		// notif to developer
+
 		return nil, err
 	}
 	postRequest := utility.PostDataRequest{
 
-		Time: 1,
 		Packet: utility.Packet{
-			Uid:        nil,
+			Uid:        stui,
 			PacketType: GetToken.String(),
 			Retry:      false,
 			Data: utility.TokenBody{
 				UserName: client.UserName,
 			},
+			FiscalId:      client.UserName,
+			IV:            "",
+			DataSignature: "",
 		},
 		Signature: signature,
 	}
@@ -158,7 +160,7 @@ func (client ClientImpl) GetToken() (*utility.TokenResponse, error) {
 		return nil, err
 	}
 	//traceId, _ := uuid.NewV4()
-	request.Header.Set("requestTraceId", rqId.String())
+	request.Header.Set("requestTraceId", tstr)
 	request.Header.Set("timestamp", tstr)
 	request.Header.Set("Content-Type", "application/json")
 	resp, err := client.HttpClient.Do(nil, nil, rqId.String(), request, GetToken.String())
@@ -225,7 +227,7 @@ func (client ClientImpl) GetFiscalInformation(token string) {
 		// TimeStamp:      tstr,
 		// ContentType:    "application/json",
 		Packet: utility.Packet{
-			Uid:        &stui,
+			Uid:        stui,
 			PacketType: GetFiscalInformation.String(),
 			Retry:      false,
 			Data: utility.TokenBody{
@@ -319,7 +321,7 @@ func (client ClientImpl) InquiryById(token string) {
 		// TimeStamp:      tstr,
 		// ContentType:    "application/json",
 		Packet: utility.Packet{
-			Uid:        &stui,
+			Uid:        stui,
 			PacketType: InquiryByUId.String(),
 			Retry:      false,
 			Data: utility.TokenBody{
