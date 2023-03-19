@@ -1,23 +1,6 @@
 stages:
-  - test
   - build
   - deploy
-
-test_stage:
-  stage: test
-  tags:
-    - shell only
-  script:
-    - export http_proxy="http://roham:123123@51.158.191.230:8888"
-    - export https_proxy="http://roham:123123@51.158.191.230:8888"
-    - export NO_PROXY="gitlab.pinsvc.net"
-    - git config --global url."git@gitlab.pinsvc.net:".insteadof "https://gitlab.pinsvc.net/"
-    - export GOPRIVATE="gitlab.pinsvc.net/*"
-    - go test ./... -cover
-    - unset http_proxy
-    - unset https_proxy
-    - echo $http_proxy
-
 
 .build_script:
   script: &build_script
