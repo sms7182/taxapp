@@ -2,8 +2,11 @@ package pkg
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"tax-management/external/exkafka/messages"
+	terminal2 "tax-management/terminal"
+	"tax-management/types"
 	"tax-management/utility"
 
 	"github.com/gin-gonic/gin"
@@ -22,8 +25,24 @@ func (cr Controller) SetRoutes(e *gin.Engine) {
 	e.GET("/decrypt", cr.decryption)
 }
 func (cr Controller) getToken(c *gin.Context) {
-	cr.TaxClient.GetToken()
-	c.JSON(http.StatusOK, gin.H{})
+	t, e := cr.TaxClient.GetToken()
+	if e != nil {
+		c.JSON(http.StatusBadGateway, e)
+	}
+	terminal, err := terminal2.New(types.TerminalOptions{
+		PrivatePemPath:           "sign.key",
+		TerminalPublicKeyPemPath: "sign.pub",
+		ClientID:                 "A11T1F",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	t, err = terminal.GetToken()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	c.JSON(http.StatusOK, t)
 }
 
 func (cr Controller) health(c *gin.Context) {

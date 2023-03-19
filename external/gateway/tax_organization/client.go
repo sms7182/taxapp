@@ -2,19 +2,33 @@ package taxorganization
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/rsa"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
+	cryptops "tax-management/cryptopts"
 	"tax-management/pkg"
+	"tax-management/terminal"
+	"tax-management/types"
 	"tax-management/utility"
+
 	"time"
 
 	"github.com/gofrs/uuid"
 )
 
 type TaxAPIType int
+
+const (
+	RequestTraceIDHeader = "requestTraceId"
+	TimestampHeader      = "timestamp"
+)
 
 const (
 	GetServerInformation TaxAPIType = iota
@@ -27,6 +41,17 @@ func (ts TaxAPIType) String() string {
 	return []string{"GET_SERVER_INFORMATION", "GET_TOKEN", "GET_FISCAL_INFORMATION", "INQUIRY_BY_UID"}[ts]
 }
 
+func DefaultClientImpl() *ClientImpl {
+	return &ClientImpl{
+
+		//prvKey:     prvKey,
+		//pubKey:     pubKey,
+		normalizer: cryptops.NormalizeJsonObj,
+		signer:     cryptops.SignPKCS1v15,
+		encrypter:  cryptops.AesGCMNoPaddingEncrypt,
+	}
+}
+
 type ClientImpl struct {
 	HttpClient           pkg.ClientLoggerExtension
 	Url                  string
@@ -36,6 +61,14 @@ type ClientImpl struct {
 	InquiryByIdUrl       string
 	Repository           pkg.ClientRepository
 	UserName             string
+	Terminal             *terminal.Terminal
+	normalizer           func(map[string]interface{}) (string, error)
+	prvKey               *rsa.PrivateKey
+	pubKey               *rsa.PublicKey
+
+	signer func([]byte, *rsa.PrivateKey) ([]byte, error)
+
+	encrypter func(plainData, key []byte) (cipherData, nonce []byte, err error)
 }
 
 func (client ClientImpl) GetServerInformation() (*string, error) {
@@ -93,7 +126,93 @@ func (client ClientImpl) GetServerInformation() (*string, error) {
 	return &rs, nil
 }
 
-func (client ClientImpl) GetToken() (*utility.TokenResponse, error) {
+func (client ClientImpl) SendPacket(packet *types.RequestPacket, version string, headers map[string]string, encrypt, sign bool) (*types.SyncResponse, error) {
+
+	if packet == nil {
+		return nil, nil
+	}
+
+	if headers == nil {
+		headers = make(map[string]string)
+	}
+
+	client.fillEssentialHeader(headers)
+
+	if sign {
+		client.signPacket(packet)
+	}
+
+	if encrypt {
+		client.encryptPacket(packet)
+	}
+
+	normalizedForm, err := client.normalizer(client.mergePacketAndHeaders(packet, headers))
+	if err != nil {
+		return nil, err
+	}
+
+	requestSign, err := client.signer([]byte(normalizedForm), client.prvKey)
+	if err != nil {
+		return nil, err
+	}
+
+	reqJsonBody, err := json.Marshal(&types.SyncReq{
+		SignedPacket: types.SignedPacket{
+			Signature: base64.StdEncoding.EncodeToString(requestSign),
+		},
+		Packet: packet,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	u, err := url.Parse(client.Url)
+	if err != nil {
+		return nil, err
+	}
+
+	u.Path = u.Path + "/sync/" + version //path.Join(u.Path, filepath.Join("sync", version))
+
+	httpReq, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewReader(reqJsonBody))
+	if err != nil {
+		return nil, err
+	}
+
+	headers["Content-Type"] = "application/json"
+	for k, v := range headers {
+		httpReq.Header[k] = []string{v}
+	}
+
+	resp, err := http.DefaultClient.Do(httpReq)
+	if err != nil {
+		return nil, err
+	}
+
+	sr := new(types.SyncResponse)
+
+	return sr, json.NewDecoder(resp.Body).Decode(sr)
+}
+func (client ClientImpl) GetToken() (string, error) {
+	t := client.Terminal
+	packet := t.BuildRequestPacket(struct {
+		Username string `json:"username"`
+	}{
+		Username: client.UserName,
+	}, "GET_TOKEN")
+
+	resp, err := client.SendPacket(packet, "GET_TOKEN", nil, false, false)
+	if err != nil {
+		return "", err
+	}
+	fmt.Println(resp)
+	token := (*resp).Result.Data["token"].(string)
+	exp := time.UnixMilli(int64(resp.Result.Data["expiresIn"].(float64)))
+	fmt.Printf("fix for redis exp %v", exp)
+	return token, nil
+}
+
+func (client ClientImpl) FirstGetToken() (*utility.TokenResponse, error) {
 
 	url := client.Url + client.TokenUrl
 
@@ -119,13 +238,13 @@ func (client ClientImpl) GetToken() (*utility.TokenResponse, error) {
 	}
 
 	normalized, err := utility.Normalize(sPacketReq)
-	if err != nil {
+	// if err != nil {
 
-		fmt.Printf("normalize has error,%s", err.Error())
-		return nil, err
-	}
+	// 	fmt.Printf("normalize has error,%s", err.Error())
+	// 	return nil, err
+	// }
 	//normalized := fmt.Sprintf("A11T1F#####A11T1F###GET_TOKEN#%s#false###%s#%s", tstr, tstr, stui)
-	signature, err := utility.SignAndVerify(normalized) //utility.Sign(*normalized)
+	signature, err := utility.Sign(*normalized)
 
 	if err != nil {
 		fmt.Printf("sign has error %s", err.Error())
@@ -370,4 +489,72 @@ func (client ClientImpl) InquiryById(token string) {
 
 	}
 
+}
+
+func (t *ClientImpl) fillEssentialHeader(headers map[string]string) {
+	unixMilli := fmt.Sprint(time.Now().UnixMilli())
+	if _, ok := headers[RequestTraceIDHeader]; !ok {
+		headers[RequestTraceIDHeader] = unixMilli
+	}
+
+	if _, ok := headers[TimestampHeader]; !ok {
+		headers[TimestampHeader] = unixMilli
+	}
+}
+
+func (t *ClientImpl) signPacket(packet *types.RequestPacket) error {
+	normalizedForm, err := t.normalizer(packet.GetDataJSONMap())
+	if err != nil {
+		return err
+	}
+
+	sig, err := t.signer([]byte(normalizedForm), t.prvKey)
+	if err != nil {
+		return err
+	}
+
+	packet.DataSignature = base64.StdEncoding.EncodeToString(sig)
+	return nil
+}
+
+func (t *ClientImpl) encryptPacket(packet *types.RequestPacket) error {
+	key := make([]byte, 32)
+	rand.Read(key)
+
+	packet.SymmetricKey = hex.EncodeToString(key)
+	jsonBytes, err := json.Marshal(packet.Data)
+	if err != nil {
+		return err
+	}
+
+	cipherData, nonce, err := t.encrypter(t.xorBytes(jsonBytes, key), key)
+	if err != nil {
+		return err
+	}
+
+	packet.IV = hex.EncodeToString(nonce)
+	packet.Data = base64.StdEncoding.EncodeToString(cipherData)
+
+	return nil
+}
+
+func (t *ClientImpl) xorBytes(a, b []byte) []byte {
+	if len(b) > len(a) {
+		a, b = b, a
+	}
+	c := make([]byte, len(a))
+	for i := range c {
+		c[i] = a[i%len(a)] ^ b[i%len(b)]
+	}
+	return c
+}
+
+func (t *ClientImpl) mergePacketAndHeaders(packet *types.RequestPacket, headers map[string]string) map[string]interface{} {
+	result := packet.GetJSONMap()
+
+	for k, v := range headers {
+		result[k] = v
+	}
+
+	return result
 }

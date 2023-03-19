@@ -123,30 +123,6 @@ func xorrox(input, key []byte) (output []byte) {
 	return val
 }
 
-func NormalizeJson(data interface{}) (map[string]interface{}, error) {
-
-	// bytes, err := json.Marshal(data)
-	// if err != nil {
-
-	// 	return nil, err
-	// }
-	// jsonS := string(bytes)
-
-	// fmt.Printf(jsonS)
-	// x := make(map[string]interface{})
-	// result:=make(map[string]interface{})
-	// json.Unmarshal([]byte(jsonS), &x)
-	// keys := maps.Keys(x)
-	// //sort.Strings(keys)
-	// for k := range keys {
-	// 	if x[k] != nil && reflect.TypeOf(x[k]) == reflect.TypeOf((*Packet)(nil)) {
-	// 	   nested,err:= json.Marshal(x[k])
-	// 	  // if
-
-	// 	}
-	// }
-	return nil, nil
-}
 func Normalize(obj interface{}) (*string, error) {
 	t := reflect.TypeOf(obj)
 	if kind := t.Kind(); kind != reflect.Struct {

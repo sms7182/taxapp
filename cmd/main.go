@@ -4,14 +4,18 @@ import (
 	"fmt"
 	"time"
 
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/pem"
 	"os"
-
 	"tax-management/external/exkafka"
 	"tax-management/external/exkafka/messages"
 	"tax-management/external/gateway"
 	taxorganization "tax-management/external/gateway/tax_organization"
 	"tax-management/external/pg"
 	"tax-management/pkg"
+	terminal2 "tax-management/terminal"
+	"tax-management/types"
 
 	"github.com/gin-gonic/gin"
 
@@ -48,8 +52,16 @@ func main() {
 	}
 	rdb := getActualRedisClient()
 	redisClient := getRedisClient(rdb)
-	taxClient := taxClientConfiguration(repository, client)
-	kafkaService := kafkaConfiguration(repository, redisClient, taxClient)
+	terminal, err := terminal2.New(types.TerminalOptions{
+		PrivatePemPath:           "sign.key",
+		TerminalPublicKeyPemPath: "sign.pub",
+		ClientID:                 "A11T1F",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	taxClient := taxClientConfiguration(repository, client, *terminal)
+	kafkaService := kafkaConfiguration(repository, redisClient, taxClient, *terminal)
 	controller := pkg.Controller{
 		Service:      service,
 		KafkaService: kafkaService,
@@ -61,7 +73,7 @@ func main() {
 	router.Run(viper.GetString("serverPort"))
 }
 
-func taxClientConfiguration(repository pg.RepositoryImpl, client gateway.ClientLoggerExtensionImpl) pkg.TaxClient {
+func taxClientConfiguration(repository pg.RepositoryImpl, client gateway.ClientLoggerExtensionImpl, terminal terminal2.Terminal) pkg.TaxClient {
 	url := viper.GetString("taxOrg.url")
 	tokenUrl := viper.GetString("taxOrg.tokenUrl")
 	serverUrl := viper.GetString("taxOrg.serverInformationUrl")
@@ -77,10 +89,13 @@ func taxClientConfiguration(repository pg.RepositoryImpl, client gateway.ClientL
 		FiscalInformationUrl: fisicalUrl,
 		InquiryByIdUrl:       inquiryByIdUrl,
 		UserName:             usr,
+		Terminal:             &terminal,
 	}
+	taxorganization.DefaultClientImpl()
 	return taxClient
 }
-func kafkaConfiguration(repository pg.RepositoryImpl, redis pg.RedisServiceImpl, client pkg.TaxClient) exkafka.KafkaServiceImpl {
+
+func kafkaConfiguration(repository pg.RepositoryImpl, redis pg.RedisServiceImpl, client pkg.TaxClient, terminal terminal2.Terminal) exkafka.KafkaServiceImpl {
 
 	var kafkaSetting KafkaSetting
 
@@ -109,6 +124,7 @@ func kafkaConfiguration(repository pg.RepositoryImpl, redis pg.RedisServiceImpl,
 		Redis:         redis,
 		Repository:    repository,
 		TaxClient:     client,
+		Terminal:      &terminal,
 	}
 
 	for k, v := range kafkaSetting.Kafka.ConsumerTopics {
@@ -132,7 +148,26 @@ func kafkaConfiguration(repository pg.RepositoryImpl, redis pg.RedisServiceImpl,
 	return kafkaConf
 
 }
+func getPrivateKey(pvPath string) (*rsa.PrivateKey, *rsa.PublicKey, error) {
+	prvPemBytes, err := os.ReadFile(pvPath)
+	if err != nil {
+		return nil, nil, err
+	}
 
+	prvBlock, _ := pem.Decode(prvPemBytes)
+	if prvBlock == nil {
+		return nil, nil, fmt.Errorf("invalid kitchen private key")
+	}
+
+	prv, err := x509.ParsePKCS8PrivateKey(prvBlock.Bytes)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	privateKey := prv.(*rsa.PrivateKey)
+
+	return privateKey, &privateKey.PublicKey, nil
+}
 func getActualRedisClient() *redis.Client {
 	return redis.NewClient(&redis.Options{
 		Addr:     viper.GetString("redis.url"),

@@ -6,8 +6,7 @@ import (
 	"fmt"
 	"tax-management/external/exkafka/messages"
 	"tax-management/pkg"
-	"tax-management/utility"
-	"time"
+	terminal2 "tax-management/terminal"
 
 	"github.com/gofrs/uuid"
 	"github.com/segmentio/kafka-go"
@@ -22,6 +21,7 @@ type KafkaServiceImpl struct {
 	Url           string
 	TokenUrl      string
 	ServerInfoUrl string
+	Terminal      *terminal2.Terminal
 }
 
 func (kpi KafkaServiceImpl) Publish(msg messages.RawTransaction) error {
@@ -52,51 +52,7 @@ func (kpi KafkaServiceImpl) Consumer(message *messages.RawTransaction, consumerT
 		fmt.Errorf("Insert raw taxData has error %s", err.Error())
 	}
 	fmt.Printf("id is %s", id)
+	token, err := kpi.Terminal.GetToken()
+	fmt.Printf("token is %s", token)
 
-	serverInformation, err := kpi.TaxClient.GetServerInformation()
-	if err != nil {
-		fmt.Printf("GetServer information has error %s", err.Error())
-		return
-	}
-	fmt.Printf("Server information is %s", *serverInformation)
-
-	// normalize
-	requestToNormalize := utility.SignatureFirstTypeRequest{
-		Authorization:  "1234",
-		RequestTraceId: "",
-		TimeStamp:      time.Now().String(),
-	}
-	pft := utility.PacketFirstType{
-		Uid:        "",
-		PacketType: "invoice",
-		Retry:      false,
-		Data:       message.After,
-	}
-	requestToNormalize.Packets = append(requestToNormalize.Packets, pft)
-	normalized, err := utility.Normalize(requestToNormalize)
-	if err != nil {
-		// update for retry has error in normalize
-		// notif to developer
-		fmt.Printf("normalize has error,%s", err.Error())
-	}
-
-	signature, err := utility.SignAndVerify(normalized)
-	if err != nil {
-		fmt.Printf("sign has error %s", err.Error())
-		// update for retry has error in normalize
-		// notif to developer
-	}
-	fmt.Printf("signature: %s", *signature)
-	// token, err := kpi.Redis.Get(ctx, getTokenKey())
-	// if err != nil {
-	// 	tokenResp, err := kpi.get_token()
-	// 	if err != nil {
-	// 		fmt.Printf("Get token has error %s", err.Error())
-	// 	} else {
-	// 		if tokenResp != nil {
-	// 			kpi.Redis.Set(ctx, getTokenKey(), *tokenResp, 3000)
-	// 		}
-	// 	}
-	// }
-	// fmt.Printf("just for using token %s", token)
 }
