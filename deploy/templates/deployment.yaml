@@ -1,0 +1,72 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "project.fullname" . }}
+  labels:
+    app: {{ template "project.fullname" . }}
+    chart: {{ template "project.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ template "project.fullname" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      annotations:
+        commitSha: "{{ .Values.commitSha }}"
+      labels:
+        app: {{ template "project.fullname" . }}
+        release: {{ .Release.Name }}
+    spec:
+      serviceAcountName: {{ template "project.fullname" . }}
+      serviceAccount: {{ template "project.fullname" . }}
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - {{ template "project.fullname" . }}
+                topologyKey: kubernetes.io/hostname
+              weight: 100
+      imagePullSecrets:
+        - name: "{{ .Values.imagePullSecrets }}"
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image }}"
+          imagePullPolicy: IfNotPresent
+          env:
+          - name: CONFIG_NAME
+            value: "app.conf"
+          resources: {{ toYaml .Values.resources | indent 10 }}
+          ports:
+            - name: app
+              containerPort: {{ .Values.service.port }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: app
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: app
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 3
+          volumeMounts:
+            - name: app-conf-volume
+              mountPath: /opt/conf/app.conf
+              subPath: app.conf
+      volumes:
+        - name: app-conf-volume
+          configMap:
+            name: {{ template "project.fullname" . }}-config-map

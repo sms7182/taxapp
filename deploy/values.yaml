@@ -1,0 +1,24 @@
+service:
+  port: 9000
+
+resources: {}
+ingressClass: local
+
+
+ingress:
+  enabled: true
+  annotations:
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, OPTIONS, DELETE, HEAD"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://snapptrip.com, http://localhost:9000, http://localhost"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "false"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "access-control-allow-origin, lang, x-auth-id, Content-Type, x-mock-response-code, authorization"
+    nginx.ingress.kubernetes.io/whitelist-source-range: "93.126.5.132/32,192.168.88.1/32,51.89.163.88/32,51.89.163.89/32,84.241.21.59/32,65.21.73.76/32,5.160.29.160/27,81.16.112.30/32,81.16.112.51/32,81.16.112.64/32,81.16.112.75/32,81.16.112.77/32,89.219.122.167/32"
+  hosts:
+    - api.flight.provider.ptp
+    - fp.snapptrip.com
+  tls:
+    - secretName: snapptrip-com-ssl
+      hosts:
+        - www.snapptrip.com
+        - fp.snapptrip.com

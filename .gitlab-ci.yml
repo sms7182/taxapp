@@ -1,0 +1,112 @@
+stages:
+  - build
+  - deploy
+
+.build_script:
+  script: &build_script
+    - export http_proxy="http://roham:123123@51.158.191.230:8888"
+    - export https_proxy="http://roham:123123@51.158.191.230:8888"
+    - go build -o app cmd/main.go
+    - unset http_proxy
+    - unset https_proxy
+    - docker login -u $REG_USER -p $REG_PASSWORD $REG_SERVER
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+    - docker push $IMAGE_NAME:$IMAGE_TAG
+    - docker tag $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME
+    - docker push $IMAGE_NAME
+
+.deploy_script:
+  script: &deploy_script
+    - >
+      helm template
+      --kube-context $CONTEXT
+      --namespace $CI_PROJECT_NAMESPACE
+      --set namespace=$CI_PROJECT_NAMESPACE
+      --set configResource=$CONFIG_RESOURCE
+      --set replicas=$REPLICAS
+      --set imagePullSecrets=$imagePullSecrets
+      --set image=$REG_SERVER/$CI_PROJECT_PATH/$BRANCH_NAME:$IMAGE_TAG
+      --set ingressClass=flight-$CONTEXT
+      --set ingress.path="/tax-management/?(.*)"
+      deploy
+    - >
+      helm upgrade
+      --kube-context $CONTEXT
+      --namespace $CI_PROJECT_NAMESPACE
+      --set namespace=$CI_PROJECT_NAMESPACE
+      --set configResource=$CONFIG_RESOURCE
+      --set replicas=$REPLICAS
+      --set imagePullSecrets=$imagePullSecrets
+      --set image=$REG_SERVER/$CI_PROJECT_PATH/$BRANCH_NAME:$IMAGE_TAG
+      --set ingressClass=flight-$CONTEXT
+      --set ingress.path="/tax-management/?(.*)"
+      --force
+      --install
+      $BRANCH_NAME-$CI_PROJECT_NAME
+      deploy
+
+
+build_beta:
+  stage: build
+  tags:
+    - shell only
+  retry: 2
+  script: *build_script
+  variables:
+    IMAGE_NAME: $CI_REGISTRY_IMAGE/$CI_COMMIT_REF_NAME
+    IMAGE_TAG: $CI_COMMIT_SHA
+    REG_USER: gitlab-ci-token
+    REG_PASSWORD: $CI_JOB_TOKEN
+    REG_SERVER: $CI_REGISTRY
+  only:
+    - beta
+
+
+build_master:
+  stage: build
+  tags:
+    - shell only
+  retry: 2
+  script: *build_script
+  variables:
+    IMAGE_NAME: $REGISTRY_SERVER/$CI_PROJECT_PATH/master
+    IMAGE_TAG: $CI_COMMIT_TAG
+    REG_USER: $REGISTRY_USER
+    REG_PASSWORD: $REGISTRY_PASSWORD
+    REG_SERVER: $REGISTRY_SERVER
+  only:
+    - tags
+
+deploy_beta:
+  stage: deploy
+  tags:
+    - docker
+  retry: 2
+  script: *deploy_script
+  variables:
+    BRANCH_NAME: beta
+    IMAGE_TAG: $CI_COMMIT_SHA
+    CONFIG_RESOURCE: beta.conf
+    imagePullSecrets: regsecret
+    CONTEXT: local
+    REG_SERVER: localhost
+    REPLICAS: 1
+  only:
+    - beta
+
+deploy_master_pars:
+  stage: deploy
+  tags:
+    - docker
+  retry: 2
+  script: *deploy_script
+  variables:
+    BRANCH_NAME: master
+    IMAGE_TAG: $CI_COMMIT_TAG
+    CONFIG_RESOURCE: master.conf
+    imagePullSecrets: production-registry
+    CONTEXT: pars
+    REG_SERVER: localhost
+    REPLICAS: 2
+  only:
+    - tags
