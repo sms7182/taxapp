@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-func (t *Terminal) GetToken() (string, error) {
+func (t *Terminal) GetToken(taxRawId *uint, taxProcessId *uint, requestUniqueId string) (string, error) {
 	t.mtx.Lock()
 	defer t.mtx.Unlock()
 
@@ -16,9 +16,9 @@ func (t *Terminal) GetToken() (string, error) {
 		Username string `json:"username"`
 	}{
 		Username: t.clientID,
-	}, "GET_TOKEN")
+	}, "GET_TOKEN", requestUniqueId)
 
-	resp, err := t.transferAPI.SendPacket(packet, "GET_TOKEN", "", false, false)
+	resp, err := t.transferAPI.SendPacket(taxRawId, taxProcessId, requestUniqueId, packet, "GET_TOKEN", "", false, false)
 	if err != nil {
 		return "", err
 	}

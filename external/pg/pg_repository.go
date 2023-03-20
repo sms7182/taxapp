@@ -29,32 +29,24 @@ func (repository RepositoryImpl) LogReqRes(taxRawId *uint, taxProcessId *uint, r
 	return repository.DB.Create(&taxOfficeRequest).Error
 }
 
-func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType string, taxData external.RawTransaction) (*string, error) {
+func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType string, taxData external.RawTransaction) (uint, uint, error) {
 	tax := models2.TaxRawDomain{
 		TaxType:  rawType,
 		UniqueId: taxData.After.Trn + "-" + rawType,
 	}
 	tax.TaxData.Set(taxData)
+	taxProcess := toTaxProcess(tax, rawType)
 
-	var taxUniqId *string
 	err := repository.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if e := tx.Clauses(clause.Returning{}).Create(&tax).Error; e != nil {
 			return e
 		}
-		taxProcess := toTaxProcess(tax, rawType)
-
-		err := tx.Create(&taxProcess).Error
-		if err == nil {
-			taxUniqId = &taxProcess.TaxUniqueId
-		}
-		return err
+		return tx.Create(&taxProcess).Error
 	})
 	if err != nil {
-		return nil, err
+		return 0, 0, err
 	}
-
-	return taxUniqId, nil
-
+	return tax.Id, taxProcess.Id, nil
 }
 func toTaxProcess(tax models2.TaxRawDomain, rawType string) models2.TaxProcess {
 	taxP := models2.TaxProcess{

@@ -13,7 +13,7 @@ kafka:
   facility: "local-dev-tax"
 
 taxOrg:
-  url: "https://tp.tax.gov.ir/req/api/tsp/"
+  url: "https://tp.tax.gov.ir/req/api/self-tsp/"
 
 araJahanUsername: "A11T1F"
 delijanUsername: "ma farz mikonim dadan"

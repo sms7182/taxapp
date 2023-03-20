@@ -45,12 +45,15 @@ func main() {
 	araJahanUsername := viper.GetString("araJahanUsername")
 	delijanUsername := viper.GetString("delijanUsername")
 
+	httpClientExte := terminal.ClientLoggerExtensionImpl{repository}
+
 	arajahanTerminal, err := terminal.New(
 		types.TerminalOptions{
 			TripPrivatePemPath: "./sign_ara.key",
 			ClientID:           araJahanUsername,
 			TerminalBaseURl:    viper.GetString("taxOrg.url"),
 		},
+		httpClientExte,
 	)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create client for %s, err: %+v", araJahanUsername, err))
@@ -62,12 +65,13 @@ func main() {
 			ClientID:           delijanUsername,
 			TerminalBaseURl:    viper.GetString("taxOrg.url"),
 		},
+		httpClientExte,
 	)
 	if err != nil {
 		panic(fmt.Sprintf("failed to create client for %s, err: %+v", delijanUsername, err))
 	}
 
-	taxClientMap := make(map[string]*terminal.Terminal)
+	taxClientMap := make(map[string]pkg.TaxClient)
 	taxClientMap[araJahanUsername] = arajahanTerminal
 	taxClientMap[delijanUsername] = delijanTerminal
 	service := pkg.Service{Repository: repository, TaxClient: taxClientMap}

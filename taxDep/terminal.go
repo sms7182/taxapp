@@ -7,9 +7,9 @@ import (
 	"errors"
 	"os"
 	"sync"
+	"tax-management/pkg"
 	"time"
 
-	"github.com/google/uuid"
 	"tax-management/taxDep/transfer"
 	"tax-management/taxDep/types"
 )
@@ -25,13 +25,13 @@ type Terminal struct {
 	mtx      sync.Mutex
 }
 
-func New(opt types.TerminalOptions) (*Terminal, error) {
+func New(opt types.TerminalOptions, httpClientExtension pkg.ClientLoggerExtension) (*Terminal, error) {
 	prv, pub, err := getPrivateKey(opt.TripPrivatePemPath)
 	if err != nil {
 		return nil, err
 	}
 
-	tr, err := transfer.NewApiTransfer(transfer.DefaultAPIConfig(prv, pub, opt.ClientID, opt.TerminalBaseURl))
+	tr, err := transfer.NewApiTransfer(transfer.DefaultAPIConfig(prv, pub, opt.ClientID, opt.TerminalBaseURl), httpClientExtension)
 	if err != nil {
 		return nil, err
 	}
@@ -65,10 +65,9 @@ func getPrivateKey(pvPath string) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	return privateKey, &privateKey.PublicKey, nil
 }
 
-func (t *Terminal) buildRequestPacket(data any, packetType string) *types.RequestPacket {
-	uid := uuid.NewString()
+func (t *Terminal) buildRequestPacket(data any, packetType string, uuid string) *types.RequestPacket {
 	return &types.RequestPacket{
-		UID:        uid,
+		UID:        uuid,
 		PacketType: packetType,
 		Retry:      false,
 		Data:       data,

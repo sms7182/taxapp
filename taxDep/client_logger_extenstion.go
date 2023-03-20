@@ -1,19 +1,15 @@
-package pkg
+package terminal
 
 import (
 	"bytes"
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"net/http"
+	"tax-management/pkg"
 )
 
-type ClientLoggerExtension interface {
-	Do(taxRawId *uint, taxProcessId *uint, requestUniqueId string, request *http.Request, apiname string) (*http.Response, error)
-}
-
-
 type ClientLoggerExtensionImpl struct {
-	GatewayRepository Repository
+	GatewayRepository pkg.Repository
 }
 
 func (h ClientLoggerExtensionImpl) Do(taxRawId *uint, taxProcessId *uint, requestUniqueId string, request *http.Request, apiname string) (*http.Response, error) {
@@ -90,4 +86,3 @@ func (h ClientLoggerExtensionImpl) Do(taxRawId *uint, taxProcessId *uint, reques
 	resp.Body = ioutil.NopCloser(bytes.NewReader(responseBody))
 	return resp, nil
 }
-

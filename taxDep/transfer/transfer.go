@@ -1,16 +1,21 @@
 package transfer
 
-import "crypto/rsa"
+import (
+	"crypto/rsa"
+	"tax-management/pkg"
+)
 
 type Transfer struct {
-	cfg          *ApiConfig
-	serverPubKey *rsa.PublicKey
-	pubKeyID     string
+	cfg              *ApiConfig
+	serverPubKey     *rsa.PublicKey
+	pubKeyID         string
+	HttpClientLogger pkg.ClientLoggerExtension
 }
 
-func NewApiTransfer(cfg *ApiConfig) (*Transfer, error) {
+func NewApiTransfer(cfg *ApiConfig, httpClientLogger pkg.ClientLoggerExtension) (*Transfer, error) {
 	transfer := &Transfer{
-		cfg: cfg,
+		cfg:              cfg,
+		HttpClientLogger: httpClientLogger,
 	}
 
 	return transfer, transfer.setServerInfos()

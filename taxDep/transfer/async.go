@@ -14,7 +14,15 @@ import (
 	"tax-management/taxDep/types"
 )
 
-func (t *Transfer) SendPackets(packets []types.RequestPacket, version string, token string, encrypt, sign bool) (*types.AsyncResponse, error) {
+func (t *Transfer) SendPackets(
+	taxRawId *uint,
+	taxProcessId *uint,
+	requestUniqueId string,
+	packets []types.RequestPacket,
+	version string,
+	token string,
+	encrypt,
+	sign bool) (*types.AsyncResponse, error) {
 	if len(packets) == 0 {
 		return nil, nil
 	}
@@ -94,7 +102,7 @@ func (t *Transfer) SendPackets(packets []types.RequestPacket, version string, to
 		httpReq.Header[k] = []string{v}
 	}
 
-	resp, err := http.DefaultClient.Do(httpReq)
+	resp, err := t.HttpClientLogger.Do(taxRawId, taxProcessId, requestUniqueId, httpReq, "SendInvoice")
 	if err != nil {
 		return nil, err
 	}

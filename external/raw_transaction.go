@@ -52,7 +52,7 @@ type RawTransaction struct {
 	TsMs        int64       `json:"ts_ms"`
 }
 
-func (r RawTransaction) ToStandardInvoice() types.StandardInvoice {
+func (r RawTransaction) ToStandardInvoice() []types.StandardInvoice {
 	after := r.After
 	header := types.InvoiceHeader{
 		Indatim: after.Indatim,
@@ -84,14 +84,16 @@ func (r RawTransaction) ToStandardInvoice() types.StandardInvoice {
 			Tsstam: float64(after.Tsstam),
 		},
 	}
-	return types.StandardInvoice{
-		Header: header,
-		Body:   items,
-		Payments: []types.InvoicePayments{
-			{
-				Trn: after.Trn,
+	return []types.StandardInvoice{
+		{
+			Header: header,
+			Body:   items,
+			Payments: []types.InvoicePayments{
+				{
+					Trn: after.Trn,
+				},
 			},
+			Extensions: nil,
 		},
-		Extensions: nil,
 	}
 }

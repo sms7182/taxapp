@@ -3,17 +3,29 @@ package pkg
 import (
 	"context"
 	"tax-management/external"
-	terminal "tax-management/taxDep"
 )
 
 type Service struct {
 	Repository Repository
-	TaxClient  map[string]*terminal.Terminal
+	TaxClient  map[string]TaxClient
 }
 
 func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransaction) error {
-	s.Repository.InsertTaxData(context.Background(), topicName, data)
+	taxId, taxProcessId, e := s.Repository.InsertTaxData(context.Background(), topicName, data)
+	if e != nil {
+		panic("")
+	}
+
 	println("data")
+
+	if client, ok := s.TaxClient[data.After.Taxid]; ok {
+		invoice := data.ToStandardInvoice()
+		res, err := client.SendInvoices(&taxId, &taxProcessId, invoice)
+		if err != nil {
+			panic("")
+		}
+		println(res)
+	}
 
 	//taxClient := s.TaxClient[""]
 

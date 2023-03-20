@@ -12,7 +12,7 @@ import (
 	"tax-management/taxDep/types"
 )
 
-func (t *Transfer) SendPacket(packet *types.RequestPacket, version string, token string, encrypt, sign bool) (*types.SyncResponse, error) {
+func (t *Transfer) SendPacket(taxRawId *uint, taxProcessId *uint, requestUniqueId string, packet *types.RequestPacket, version string, token string, encrypt, sign bool) (*types.SyncResponse, error) {
 	if packet == nil {
 		return nil, nil
 	}
@@ -73,7 +73,7 @@ func (t *Transfer) SendPacket(packet *types.RequestPacket, version string, token
 		httpReq.Header[k] = []string{v}
 	}
 
-	resp, err := http.DefaultClient.Do(httpReq)
+	resp, err := t.HttpClientLogger.Do(taxRawId, taxProcessId, requestUniqueId, httpReq, "GetToken")
 	if err != nil {
 		return nil, err
 	}
