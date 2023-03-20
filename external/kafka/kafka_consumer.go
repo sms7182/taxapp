@@ -20,16 +20,10 @@ func (s *SyncConsumer) StartConsuming(topics []string, msgProcessor func(topicNa
 		log.Error(msg)
 		panic(msg)
 	}
-	count := 0
 	for true {
 		ev := s.Conn.Poll(1000)
 		switch e := ev.(type) {
 		case *kafka.Message:
-			if count == 1 {
-				log.Info("already processed a message")
-				break
-			}
-			count++
 			var rawData external.RawTransaction
 			err = json.Unmarshal(e.Value, &rawData)
 			if err != nil {

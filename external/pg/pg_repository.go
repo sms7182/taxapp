@@ -48,6 +48,16 @@ func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType stri
 	}
 	return tax.Id, taxProcess.Id, nil
 }
+
+func (repository RepositoryImpl) UpdateTaxReferenceId(ctx context.Context, taxProcessId uint, taxOrgReferenceId string) error {
+	updTax := models2.TaxProcess{
+		Id:                taxProcessId,
+		Status:            models2.InProgress.String(),
+		TaxOrgReferenceId: &taxOrgReferenceId,
+	}
+	return repository.DB.Model(&models2.TaxProcess{}).Where("id = ?", taxProcessId).Updates(updTax).Error
+}
+
 func toTaxProcess(tax models2.TaxRawDomain, rawType string) models2.TaxProcess {
 	taxP := models2.TaxProcess{
 		TaxType:  rawType,

@@ -10,24 +10,26 @@ import (
 type TaxStatus int
 
 const (
-	InProgress TaxStatus = iota
+	Sending TaxStatus = iota
+	InProgress
 	Retry
 	Failed
 	Completed
 )
 
 func (ts TaxStatus) String() string {
-	return []string{"inprogress", "retry", "failed", "completed"}[ts]
+	return []string{"sending", "in-progress", "retry", "failed", "completed"}[ts]
 }
 
 type TaxProcess struct {
-	Id          uint      `gorm:"autoIncrement,primaryKey"`
-	CreatedAt   time.Time `gorm:"column:created_at"`
-	UpdatedAt   time.Time `gorm:"column:updated_at"`
-	TaxUniqueId string    `gorm:"column:tax_unique_id"`
-	TaxType     string    `gorm:"column:tax_type"`
-	TaxRawId    uint      `gorm:"column:tax_raw_id"`
-	Status      string    `gorm:"column:status"`
+	Id                uint      `gorm:"autoIncrement,primaryKey"`
+	CreatedAt         time.Time `gorm:"column:created_at"`
+	UpdatedAt         time.Time `gorm:"column:updated_at"`
+	TaxUniqueId       string    `gorm:"column:tax_unique_id"`
+	TaxType           string    `gorm:"column:tax_type"`
+	TaxRawId          uint      `gorm:"column:tax_raw_id"`
+	Status            string    `gorm:"column:status"`
+	TaxOrgReferenceId *string   `gorm:"column:tax_org_reference_id"`
 }
 
 func (obj *TaxProcess) BeforeCreate(_ *gorm.DB) error {
@@ -38,7 +40,7 @@ func (obj *TaxProcess) BeforeCreate(_ *gorm.DB) error {
 	obj.TaxUniqueId = id.String()
 	obj.CreatedAt = time.Now()
 	obj.UpdatedAt = obj.CreatedAt
-	obj.Status = InProgress.String()
+	obj.Status = Sending.String()
 
 	return nil
 }

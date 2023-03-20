@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"context"
+	"errors"
 	"tax-management/external"
 )
 
@@ -24,12 +25,12 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 		if err != nil {
 			panic("")
 		}
-		println(res)
+
+		if len(res.Result) > 0 && len(res.Errors) == 0 {
+			arp := res.Result[0]
+			return s.Repository.UpdateTaxReferenceId(context.Background(), taxProcessId, arp.ReferenceNumber)
+		}
+
 	}
-
-	//taxClient := s.TaxClient[""]
-
-	//taxClient.SendInvoices()
-
-	return nil
+	return errors.New("failed to process kafka message")
 }
