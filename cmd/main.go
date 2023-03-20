@@ -61,7 +61,7 @@ func main() {
 
 	delijanTerminal, err := terminal.New(
 		types.TerminalOptions{
-			TripPrivatePemPath: "sign_ara.key",
+			TripPrivatePemPath: "sign_delijan.key",
 			ClientID:           delijanUsername,
 			TerminalBaseURl:    viper.GetString("taxOrg.url"),
 		},

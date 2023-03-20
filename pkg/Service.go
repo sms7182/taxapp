@@ -20,8 +20,6 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 		panic("")
 	}
 
-	println("data")
-
 	farvardin1, _ := time.Parse(layout, "2023-03-20T23:59:59")
 
 	if time.UnixMicro(data.After.Indatim).Before(farvardin1) {
