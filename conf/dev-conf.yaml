@@ -4,6 +4,7 @@ pgMigrationSource: "postgres://pgsql:Astronomiex1235@192.168.88.101:5432/tax_man
 kafka:
   urls: "192.168.88.143:9092,192.168.88.144:9092,192.168.88.145:9092"
   consumerTopics:
+    - "dummy-topic"
     - "dbz_.public.tax_bus_other_provider"
   #    - "dbz_.public.tax_dom_flight_free_cancellation"
   #    - "dbz_.public.tax_dom_flight_market_place"
