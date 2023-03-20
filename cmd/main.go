@@ -5,12 +5,15 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
+	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/gin-gonic/gin"
 	"os"
+	kafka2 "tax-management/external/kafka"
 	"tax-management/external/pg"
 	redis2 "tax-management/external/redis"
 	"tax-management/pkg"
-
-	"github.com/gin-gonic/gin"
+	terminal "tax-management/taxDep"
+	"tax-management/taxDep/types"
 
 	"github.com/go-redis/redis/v8"
 
@@ -36,11 +39,54 @@ func main() {
 	//rdb := getActualRedisClient()
 	//redisClient := getRedisClient(rdb)
 
-	controller := pkg.Controller{Repository: repository}
+	kafkaConn := NewConsumer()
+	syncConsumer := kafka2.SyncConsumer{Conn: kafkaConn}
+
+	araJahanUsername := viper.GetString("araJahanUsername")
+	delijanUsername := viper.GetString("delijanUsername")
+
+	arajahanTerminal, err := terminal.New(
+		types.TerminalOptions{
+			TripPrivatePemPath: "./sign_ara.key",
+			ClientID:           araJahanUsername,
+			TerminalBaseURl:    viper.GetString("taxOrg.url"),
+		},
+	)
+	if err != nil {
+		panic(fmt.Sprintf("failed to create client for %s, err: %+v", araJahanUsername, err))
+	}
+
+	delijanTerminal, err := terminal.New(
+		types.TerminalOptions{
+			TripPrivatePemPath: "sign_ara.key",
+			ClientID:           delijanUsername,
+			TerminalBaseURl:    viper.GetString("taxOrg.url"),
+		},
+	)
+	if err != nil {
+		panic(fmt.Sprintf("failed to create client for %s, err: %+v", delijanUsername, err))
+	}
+
+	taxClientMap := make(map[string]*terminal.Terminal)
+	taxClientMap[araJahanUsername] = arajahanTerminal
+	taxClientMap[delijanUsername] = delijanTerminal
+	service := pkg.Service{Repository: repository, TaxClient: taxClientMap}
+	syncConsumer.StartConsuming(viper.GetStringSlice("kafka.consumerTopics"), service.ProcessKafkaMessage)
+	controller := pkg.Controller{}
 	router := gin.New()
 	controller.SetRoutes(router)
-
 	router.Run(viper.GetString("serverPort"))
+}
+
+func NewConsumer() *kafka.Consumer {
+	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
+		"bootstrap.servers": viper.GetString("kafka.urls"),
+		"group.id":          "tax-management2",
+		"auto.offset.reset": "smallest"})
+	if err != nil {
+		panic("failed to create consumer")
+	}
+	return consumer
 }
 
 func getPrivateKey(pvPath string) (*rsa.PrivateKey, *rsa.PublicKey, error) {
@@ -51,7 +97,7 @@ func getPrivateKey(pvPath string) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 
 	prvBlock, _ := pem.Decode(prvPemBytes)
 	if prvBlock == nil {
-		return nil, nil, fmt.Errorf("invalid kitchen private key")
+		return nil, nil, fmt.Errorf("invalid trip private key")
 	}
 
 	prv, err := x509.ParsePKCS8PrivateKey(prvBlock.Bytes)

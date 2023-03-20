@@ -1,5 +1,7 @@
 package external
 
+import "tax-management/taxDep/types"
+
 type AfterData struct {
 	Taxid   string `json:"taxid"`
 	Tinb    string `json:"tinb"`
@@ -48,4 +50,48 @@ type RawTransaction struct {
 	Source      SourceData  `json:"source"`
 	Transaction interface{} `json:"transaction"`
 	TsMs        int64       `json:"ts_ms"`
+}
+
+func (r RawTransaction) ToStandardInvoice() types.StandardInvoice {
+	after := r.After
+	header := types.InvoiceHeader{
+		Indatim: after.Indatim,
+		Inty:    after.Inty,
+		Setm:    after.Setm,
+		Tins:    after.Tins,
+		Taxid:   after.Taxid,
+		Inp:     after.Inp,
+		Ins:     after.Ins,
+		Tprdis:  float64(after.Tprdis),
+		Tdis:    float64(after.Tdis),
+		Tadis:   float64(after.Tadis),
+		Tvam:    float64(after.Tvam),
+		Todam:   float64(after.Todam),
+		Tbill:   float64(after.Tbill),
+		Tob:     after.Tob,
+		Tinb:    after.Tinb,
+	}
+	items := []types.InvoiceItem{
+		{
+			Sstid:  after.Sstid,
+			Am:     float64(after.Am),
+			Fee:    float64(after.Fee),
+			Prdis:  float64(after.Prdis),
+			Dis:    float64(after.Dis),
+			Adis:   float64(after.Adis),
+			Vra:    float64(after.Vra),
+			Vam:    float64(after.Vam),
+			Tsstam: float64(after.Tsstam),
+		},
+	}
+	return types.StandardInvoice{
+		Header: header,
+		Body:   items,
+		Payments: []types.InvoicePayments{
+			{
+				Trn: after.Trn,
+			},
+		},
+		Extensions: nil,
+	}
 }

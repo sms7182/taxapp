@@ -26,7 +26,7 @@ type Terminal struct {
 }
 
 func New(opt types.TerminalOptions) (*Terminal, error) {
-	prv, pub, err := getPrivateKey(opt.KitchenPrivatePemPath)
+	prv, pub, err := getPrivateKey(opt.TripPrivatePemPath)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func getPrivateKey(pvPath string) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 
 	prvBlock, _ := pem.Decode(prvPemBytes)
 	if prvBlock == nil {
-		return nil, nil, errors.New("invalid kitchen private key")
+		return nil, nil, errors.New("invalid trip private key")
 	}
 
 	prv, err := x509.ParsePKCS8PrivateKey(prvBlock.Bytes)

@@ -6,7 +6,6 @@ import (
 )
 
 type Controller struct {
-	Repository Repository
 }
 
 func (cr Controller) SetRoutes(e *gin.Engine) {

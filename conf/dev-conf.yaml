@@ -2,27 +2,21 @@ serverPort: ":9000"
 postgresSource: "host=192.168.88.101 user=pgsql dbname=tax_management sslmode=disable password=Astronomiex1235"
 pgMigrationSource: "postgres://pgsql:Astronomiex1235@192.168.88.101:5432/tax_management?sslmode=disable"
 kafka:
-  urls: "localhost:9092"
-  writerTopic: "token_test_topic"
+  urls: "192.168.88.143:9092,192.168.88.144:9092,192.168.88.145:9092"
   consumerTopics:
-    test_topic: "token_test_topic"
-    flight_cancellation: "dbz_.public.tax_dom_flight_free_cancellation" 
-    flight_market: "dbz_.public.tax_dom_flight_market_place"
-    flight_markup: "dbz_.public.tax_dom_flight_markup"
-    hotel_mp: "dbz_.public.tax_dom_hotel_mp"
-    hotel_ratail: "dbz_.public.tax_dom_hotel_retail"
-
+    - "dummy-topic"
+#    - "dbz_.public.tax_dom_flight_free_cancellation"
+#    - "dbz_.public.tax_dom_flight_market_place"
+#    - "dbz_.public.tax_dom_flight_markup"
+#    - "dbz_.public.tax_dom_hotel_mp"
+#    - "dbz_.public.tax_dom_hotel_retail"
   facility: "local-dev-tax"
+
 taxOrg:
-  # username: "A118GE"
-  username: "A11T1F"
-  url: "https://tp.tax.gov.ir"
-  # tokenUrl: "/req/api/tsp/sync/GET_TOKEN"
-  tokenUrl: "/req/api/self-tsp/sync/GET_TOKEN"
-  serverInformationUrl: "/req/api/tsp/sync/GET_SERVER_INFORMATION"
-  fiscalInformationUrl: "/req/api/tsp/sync/GET_FISCAL_INFORMATION"
-  inquiryByIDUrl: "/req/api/tsp/sync/INQUIRY_BY_UID"
-  sendInvoiceUrl: "/req/api/tsp/sync/fast-enqueue"
+  url: "https://tp.tax.gov.ir/req/api/tsp/"
+
+araJahanUsername: "A11T1F"
+delijanUsername: "ma farz mikonim dadan"
 
 redis:
   url: "192.168.88.108:6379"

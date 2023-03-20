@@ -55,8 +55,8 @@ func sortJsonMap(m map[string]interface{}, prefix string) []kv {
 		}
 
 		if array, ok := isJsonObjectArray(v); ok {
-			for _, obj := range array {
-				result = append(result, sortJsonMap(obj.(map[string]interface{}), prefix+k+".")...)
+			for index, obj := range array {
+				result = append(result, sortJsonMap(obj.(map[string]interface{}), prefix+k+fmt.Sprintf(".E%d.", index))...)
 			}
 			continue
 		}
