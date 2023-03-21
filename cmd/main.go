@@ -59,7 +59,6 @@ func main() {
 		panic(fmt.Sprintf("failed to create client for %s, err: %+v", araJahanUsername, err))
 	}
 
-
 	delijanTerminal, err := terminal.New(
 		types.TerminalOptions{
 			TripPrivatePemPath: "./sign_delijan.key",
@@ -76,7 +75,7 @@ func main() {
 	taxClientMap[araJahanUsername] = arajahanTerminal
 	taxClientMap[delijanUsername] = delijanTerminal
 	service := pkg.Service{Repository: repository, TaxClient: taxClientMap}
-	syncConsumer.StartConsuming(viper.GetStringSlice("kafka.consumerTopics"), service.ProcessKafkaMessage)
+	go syncConsumer.StartConsuming(viper.GetStringSlice("kafka.consumerTopics"), service.ProcessKafkaMessage)
 	controller := pkg.Controller{}
 	router := gin.New()
 	controller.SetRoutes(router)
