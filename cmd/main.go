@@ -59,9 +59,10 @@ func main() {
 		panic(fmt.Sprintf("failed to create client for %s, err: %+v", araJahanUsername, err))
 	}
 
+
 	delijanTerminal, err := terminal.New(
 		types.TerminalOptions{
-			TripPrivatePemPath: "sign_delijan.key",
+			TripPrivatePemPath: "./sign_delijan.key",
 			ClientID:           delijanUsername,
 			TerminalBaseURl:    viper.GetString("taxOrg.url"),
 		},
