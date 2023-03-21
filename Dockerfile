@@ -4,5 +4,7 @@ RUN apk add --no-cache libc6-compat && apk add tzdata && apk add curl && apk add
 ENV TZ Asia/Tehran
 COPY app /opt
 COPY db/migrations/*.sql /opt/db/migrations/
+COPY sign_ara.key /opt
+COPY sign_delijan.key /opt
 WORKDIR /opt
 CMD ["./app"]
