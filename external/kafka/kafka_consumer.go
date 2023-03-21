@@ -24,6 +24,8 @@ func (s *SyncConsumer) StartConsuming(topics []string, msgProcessor func(topicNa
 		ev := s.Conn.Poll(1000)
 		switch e := ev.(type) {
 		case *kafka.Message:
+			log.Info(fmt.Sprintf("value: %+v", string(e.Value)))
+			log.Info(fmt.Sprintf("whole message: %+v", e))
 			var rawData external.RawTransaction
 			err = json.Unmarshal(e.Value, &rawData)
 			if err != nil {
@@ -31,14 +33,14 @@ func (s *SyncConsumer) StartConsuming(topics []string, msgProcessor func(topicNa
 				log.Error(msg)
 				panic(msg)
 			}
-			if msgProcessor(*e.TopicPartition.Topic, rawData) != nil {
-				panic(fmt.Sprintf("failed to process message, rawData: %+v", rawData))
+			if e := msgProcessor(*e.TopicPartition.Topic, rawData); e != nil {
+				panic(fmt.Sprintf("failed to process message, rawData: %+v, err: %s", rawData, e.Error()))
 			}
 			if _, cErr := s.Conn.CommitMessage(e); cErr != nil {
 				panic(fmt.Sprintf("failed to process message, rawData: %+v, err: %+v", rawData, cErr))
 			}
 		case kafka.Error:
-			msg := fmt.Sprintf("failed to unmarshal msg, err:%+v", err)
+			msg := fmt.Sprintf("kafka err:%+v", e.Error())
 			log.Error(msg)
 			panic(msg)
 		default:
