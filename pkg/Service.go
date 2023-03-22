@@ -48,8 +48,8 @@ func (s Service) TaxRequestInquiry() {
 	if err != nil {
 		log.Printf("Get Inprogress Taxprocess has error %s", err)
 	} else if len(taxProcess) > 0 {
-		for i:=0;i<len(taxProcess);i++{
-			taxProcess[i].
+		for i := 0; i < len(taxProcess); i++ {
+			//	taxProcess[i].
 		}
 	}
 }
