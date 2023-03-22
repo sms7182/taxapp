@@ -5,8 +5,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/gin-gonic/gin"
 	"os"
 	kafka2 "tax-management/external/kafka"
 	"tax-management/external/pg"
@@ -14,6 +12,9 @@ import (
 	"tax-management/pkg"
 	terminal "tax-management/taxDep"
 	"tax-management/taxDep/types"
+
+	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/gin-gonic/gin"
 
 	"github.com/go-redis/redis/v8"
 
@@ -76,7 +77,9 @@ func main() {
 	taxClientMap[delijanUsername] = delijanTerminal
 	service := pkg.Service{Repository: repository, TaxClient: taxClientMap}
 	go syncConsumer.StartConsuming(viper.GetStringSlice("kafka.consumerTopics"), service.ProcessKafkaMessage)
-	controller := pkg.Controller{}
+	controller := pkg.Controller{
+		Service: service,
+	}
 	router := gin.New()
 	controller.SetRoutes(router)
 	router.Run(viper.GetString("serverPort"))

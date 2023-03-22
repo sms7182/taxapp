@@ -2,11 +2,13 @@ package pg
 
 import (
 	"context"
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 	"tax-management/external"
+	"tax-management/external/pg/models"
 	models2 "tax-management/external/pg/models"
 	"time"
+
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type RepositoryImpl struct {
@@ -64,4 +66,12 @@ func toTaxProcess(tax models2.TaxRawDomain, rawType string) models2.TaxProcess {
 		TaxRawId: tax.Id,
 	}
 	return taxP
+}
+
+func (repository RepositoryImpl) GetInprogressTaxProcess(ctx context.Context) (taxProcesses []models.TaxProcess, err error) {
+	var tps []models.TaxProcess
+	if e := repository.DB.WithContext(ctx).Model(&models.TaxProcess{}).Where("status = ?", models.InProgress.String()).Scan(&tps).Error; e != nil {
+		return nil, e
+	}
+	return tps, nil
 }

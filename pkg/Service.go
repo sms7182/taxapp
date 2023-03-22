@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"errors"
+	"log"
 	"tax-management/external"
 	"time"
 )
@@ -40,4 +41,15 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 
 	}
 	return errors.New("failed to process kafka message")
+}
+
+func (s Service) TaxRequestInquiry() {
+	taxProcess, err := s.Repository.GetInprogressTaxProcess(context.Background())
+	if err != nil {
+		log.Printf("Get Inprogress Taxprocess has error %s", err)
+	} else if len(taxProcess) > 0 {
+		for i:=0;i<len(taxProcess);i++{
+			taxProcess[i].
+		}
+	}
 }

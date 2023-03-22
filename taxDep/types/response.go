@@ -34,6 +34,27 @@ type ResponseList[T any] struct {
 	Errors         []ErrorResponse `json:"errors"`
 	HttpStatusCode int             `json:"-"`
 }
+type InquiryResult struct {
+	ReferenceNumber string            `json:"referenceNumber"`
+	UID             string            `json:"uid"`
+	FiscalID        string            `json:"fiscalId"`
+	Status          string            `json:"status"`
+	PacketType      string            `json:"packetType"`
+	Data            InquiryResultData `json:"data"`
+}
+
+type InquiryResultData struct {
+	ConfirmationReferenceID string             `json:"confirmationReferenceId"`
+	Error                   []any              `json:"error"`
+	Success                 bool               `json:"success"`
+	Warning                 InquiryDataWarning `json:"warning"`
+}
+
+type InquiryDataWarning struct {
+	Code   string `json:"code"`
+	Detail []any  `json:"detail"`
+	Msg    string `json:"msg"`
+}
 
 type (
 	AsyncResponse = ResponseList[AsyncResponsePacket]
