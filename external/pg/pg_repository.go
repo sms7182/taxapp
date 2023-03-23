@@ -68,10 +68,17 @@ func toTaxProcess(tax models2.TaxRawDomain, rawType string) models2.TaxProcess {
 	return taxP
 }
 
-func (repository RepositoryImpl) GetInprogressTaxProcess(ctx context.Context) (taxProcesses []models.TaxProcess, err error) {
-	var tps []models.TaxProcess
-	if e := repository.DB.WithContext(ctx).Model(&models.TaxProcess{}).Where("status = ?", models.InProgress.String()).Scan(&tps).Error; e != nil {
+func (repository RepositoryImpl) GetInprogressTaxProcess(ctx context.Context) (taxProcesses []models.RawProcessTaxData, err error) {
+	var rawPTData []models.RawProcessTaxData
+	sqlStr := "select tp.id,tp.tax_raw_id,tp.tax_org_reference_id,trd.tax_data 	from tax_process tp join tax_raw_data trd on tp.tax_raw_id=trd.id	where tp.status='in-progress'"
+	if e := repository.DB.Raw(sqlStr).Scan(&rawPTData).Error; e != nil {
 		return nil, e
 	}
-	return tps, nil
+
+	return rawPTData, nil
+	// var tps []models.TaxProcess
+	// if e := repository.DB.WithContext(ctx).Model(&models.TaxProcess{}).Where("status = ?", models.InProgress.String()).Scan(&tps).Error; e != nil {
+	// 	return nil, e
+	// }
+	// return tps, nil
 }

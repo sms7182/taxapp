@@ -22,27 +22,28 @@ func (t *Terminal) SendInvoices(taxRawId *uint, taxProcessId *uint, invoices []t
 	return t.transferAPI.SendPackets(taxRawId, taxProcessId, requestUniqueId, packets, "normal-enqueue", token, true, true)
 }
 
-func (t *Terminal) InquiryByReferences(refs []string) ([]types.InquiryResult, error) {
-	token, err := t.GetToken()
+func (t *Terminal) InquiryByReferences(taxRawId *uint, taxProcessId *uint, refs []string) ([]types.InquiryResult, error) {
+	token, err := t.GetToken(taxRawId, taxProcessId, uuid.NewString())
 	if err != nil {
 		return nil, err
 	}
 
 	version := "INQUIRY_BY_REFERENCE_NUMBER"
 
+	requestUniqueId := uuid.NewString()
 	packet := t.buildRequestPacket(struct {
 		Refs []string `json:"referenceNumber"`
 	}{
 		Refs: refs,
-	}, version)
+	}, version, requestUniqueId)
 
-	resp, err := t.transferAPI.SendPacket(packet, version, token, false, false)
+	resp, err := t.transferAPI.SendPacket(taxRawId, taxProcessId, requestUniqueId, packet, version, token, false, false)
 	if err != nil {
 		return nil, err
 	}
 
 	var inquiryResults []types.InquiryResult
-	results := resp.Result.Data.([]any)
+	results := resp.Result.Data //.([]any)
 
 	for _, result := range results {
 		m := result.(map[string]any)

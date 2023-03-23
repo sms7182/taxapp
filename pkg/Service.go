@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"tax-management/external"
 	"time"
@@ -49,7 +50,20 @@ func (s Service) TaxRequestInquiry() {
 		log.Printf("Get Inprogress Taxprocess has error %s", err)
 	} else if len(taxProcess) > 0 {
 		for i := 0; i < len(taxProcess); i++ {
-			//	taxProcess[i].
+			var nr external.RawTransaction
+			taxProcess[i].TaxData.AssignTo(&nr)
+			if client, ok := s.TaxClient[nr.After.Taxid]; ok {
+				inquiryResult, err := client.InquiryByReferences(&taxProcess[i].TaxRawId, &taxProcess[i].Id, []string{taxProcess[i].OrgReferenceId})
+				if err == nil && len(inquiryResult) > 0 {
+					if inquiryResult[0].Data.Success {
+
+					} else {
+
+					}
+				} else {
+					fmt.Printf("inquiry has error:%s", err)
+				}
+			}
 		}
 	}
 }
