@@ -2,11 +2,12 @@ package pg
 
 import (
 	"context"
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 	"tax-management/external"
 	models2 "tax-management/external/pg/models"
 	"time"
+
+	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type RepositoryImpl struct {
@@ -41,6 +42,7 @@ func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType stri
 		if e := tx.Clauses(clause.Returning{}).Create(&tax).Error; e != nil {
 			return e
 		}
+		taxProcess.TaxRawId = tax.Id
 		return tx.Create(&taxProcess).Error
 	})
 	if err != nil {
