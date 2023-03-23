@@ -15,10 +15,11 @@ const (
 	Retry
 	Failed
 	Completed
+	Unnecessary
 )
 
 func (ts TaxStatus) String() string {
-	return []string{"sending", "in-progress", "retry", "failed", "completed"}[ts]
+	return []string{"sending", "in-progress", "retry", "failed", "completed", "unnecessary"}[ts]
 }
 
 type TaxProcess struct {
