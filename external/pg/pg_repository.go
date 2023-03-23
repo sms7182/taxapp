@@ -43,6 +43,7 @@ func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType stri
 		if e := tx.Clauses(clause.Returning{}).Create(&tax).Error; e != nil {
 			return e
 		}
+		taxProcess.TaxRawId = tax.Id
 		return tx.Create(&taxProcess).Error
 	})
 	if err != nil {

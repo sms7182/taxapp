@@ -14,12 +14,12 @@ func (t *Terminal) SendInvoices(taxRawId *uint, taxProcessId *uint, invoices []t
 
 	packets := make([]types.RequestPacket, len(invoices))
 
-	requestUniqueId := uuid.NewString()
 	for i, invoice := range invoices {
+		requestUniqueId := uuid.NewString()
 		packets[i] = *t.buildRequestPacket(invoice, "INVOICE.V01", requestUniqueId)
 	}
-
-	return t.transferAPI.SendPackets(taxRawId, taxProcessId, requestUniqueId, packets, "normal-enqueue", token, true, true)
+	reqId := uuid.NewString()
+	return t.transferAPI.SendPackets(taxRawId, taxProcessId, reqId, packets, "normal-enqueue", token, true, true)
 }
 
 func (t *Terminal) InquiryByReferences(taxRawId *uint, taxProcessId *uint, refs []string) ([]types.InquiryResult, error) {

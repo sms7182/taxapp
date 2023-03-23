@@ -12,7 +12,7 @@ type Controller struct {
 
 func (cr Controller) SetRoutes(e *gin.Engine) {
 	e.GET("/health", cr.health)
-	e.GET("/tax/fire_inquiry")
+	e.GET("/tax/fire_inquiry", cr.inquiry)
 }
 
 func (cr Controller) health(c *gin.Context) {
@@ -20,5 +20,5 @@ func (cr Controller) health(c *gin.Context) {
 }
 
 func (cr Controller) inquiry(c *gin.Context) {
-
+	cr.Service.TaxRequestInquiry()
 }
