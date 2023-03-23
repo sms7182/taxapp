@@ -59,8 +59,9 @@ func (s Service) TaxRequestInquiry() {
 				if err == nil && len(inquiryResult) > 0 {
 					if inquiryResult[0].Data.Success {
 
+						s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.Completed.String())
 					} else {
-
+						s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.Failed.String())
 					}
 				} else {
 					fmt.Printf("inquiry has error:%s", err)
