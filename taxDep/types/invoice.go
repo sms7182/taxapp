@@ -57,7 +57,7 @@ type InvoiceItem struct {
 	Cut     string  `json:"cut,omitempty"`
 	Exr     string  `json:"exr,omitempty"`
 	Prdis   float64 `json:"prdis,omitempty"`
-	Dis     float64 `json:"dis,omitempty"`
+	Dis     float64 `json:"dis"`
 	Adis    float64 `json:"adis,omitempty"`
 	Vra     float64 `json:"vra,omitempty"`
 	Vam     float64 `json:"vam,omitempty"`
