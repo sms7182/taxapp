@@ -29,10 +29,10 @@ type InvoiceHeader struct {
 	Ins      int64   `json:"ins,omitempty"`
 	Billid   string  `json:"billid,omitempty"`
 	Tprdis   float64 `json:"tprdis,omitempty"`
-	Tdis     float64 `json:"tdis,omitempty"`
+	Tdis     float64 `json:"tdis"`
 	Tadis    float64 `json:"tadis,omitempty"`
 	Tvam     float64 `json:"tvam,omitempty"`
-	Todam    float64 `json:"todam,omitempty"`
+	Todam    float64 `json:"todam"`
 	Tbill    float64 `json:"tbill,omitempty"`
 	Tob      int64   `json:"tob,omitempty"`
 	Tinb     string  `json:"tinb,omitempty"`

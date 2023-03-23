@@ -1,8 +1,9 @@
 package terminal
 
 import (
-	"github.com/google/uuid"
 	"tax-management/taxDep/types"
+
+	"github.com/google/uuid"
 )
 
 func (t *Terminal) SendInvoices(taxRawId *uint, taxProcessId *uint, invoices []types.StandardInvoice) (*types.AsyncResponse, error) {
@@ -13,8 +14,9 @@ func (t *Terminal) SendInvoices(taxRawId *uint, taxProcessId *uint, invoices []t
 
 	packets := make([]types.RequestPacket, len(invoices))
 
-	requestUniqueId := uuid.NewString()
+	var requestUniqueId string
 	for i, invoice := range invoices {
+		requestUniqueId := uuid.NewString()
 		packets[i] = *t.buildRequestPacket(invoice, "INVOICE.V01", requestUniqueId)
 	}
 
