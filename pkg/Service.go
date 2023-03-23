@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"tax-management/external"
+	"tax-management/external/pg/models"
 	"time"
 )
 
@@ -25,6 +26,7 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 	farvardin1, _ := time.Parse(layout, "2023-03-20T23:59:59")
 
 	if time.UnixMicro(data.After.Indatim).Before(farvardin1) {
+		s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcessId, models.Unnecessary.String())
 		return nil
 	}
 

@@ -11,4 +11,5 @@ type Repository interface {
 	InsertTaxData(ctx context.Context, rawType string, taxData external.RawTransaction) (taxId uint, taxProcessId uint, err error)
 	UpdateTaxReferenceId(ctx context.Context, taxProcessId uint, taxOrgReferenceId string) error
 	GetInprogressTaxProcess(ctx context.Context) (taxProcesses []models.RawProcessTaxData, err error)
+	UpdateTaxProcessStatus(ctx context.Context, taxProcessId uint, status string) error
 }
