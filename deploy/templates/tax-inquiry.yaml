@@ -1,0 +1,20 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ template "project.fullname" . }}-notify-cron-job
+spec:
+  schedule: "0/2 * * * *"
+  concurrencyPolicy: Replace
+  startingDeadlineSeconds: 180
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: hello
+              image: registry.pinsvc.net/ops/buildpack-deps:curl
+              args:
+                - /bin/sh
+                - -ec
+                - curl 'http://{{ template "project.fullname" . }}:{{ .Values.service.port }}/tax/fire_inquiry'
+          restartPolicy: OnFailure

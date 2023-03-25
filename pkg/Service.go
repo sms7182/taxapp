@@ -3,6 +3,8 @@ package pkg
 import (
 	"context"
 	"errors"
+	"fmt"
+	"log"
 	"tax-management/external"
 	"tax-management/external/pg/models"
 	"time"
@@ -27,8 +29,8 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 		s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcessId, models.Unnecessary.String())
 		return nil
 	}
-
-	if client, ok := s.TaxClient[data.After.Taxid]; ok {
+	taxIdentity := data.After.Taxid[0:6]
+	if client, ok := s.TaxClient[taxIdentity]; ok {
 		invoice := data.ToStandardInvoice()
 		res, err := client.SendInvoices(&taxId, &taxProcessId, invoice)
 		if err != nil {
@@ -42,4 +44,29 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 
 	}
 	return errors.New("failed to process kafka message")
+}
+
+func (s Service) TaxRequestInquiry() {
+	taxProcess, err := s.Repository.GetInprogressTaxProcess(context.Background())
+	if err != nil {
+		log.Printf("Get Inprogress Taxprocess has error %s", err)
+	} else if len(taxProcess) > 0 {
+		for i := 0; i < len(taxProcess); i++ {
+			var nr external.RawTransaction
+			taxProcess[i].TaxData.AssignTo(&nr)
+			if client, ok := s.TaxClient[nr.After.Taxid]; ok {
+				inquiryResult, err := client.InquiryByReferences(&taxProcess[i].TaxRawId, &taxProcess[i].Id, []string{taxProcess[i].OrgReferenceId})
+				if err == nil && len(inquiryResult) > 0 {
+					if inquiryResult[0].Data.Success {
+
+						s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.Completed.String())
+					} else {
+						s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.Failed.String())
+					}
+				} else {
+					fmt.Printf("inquiry has error:%s", err)
+				}
+			}
+		}
+	}
 }
