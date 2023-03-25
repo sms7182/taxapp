@@ -1,9 +1,9 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: {{ template "project.fullname" . }}-notify-cron-job
+  name: {{ template "project.fullname" . }}-tax-inquiry-cron-job
 spec:
-  schedule: "0/2 * * * *"
+  schedule: "0/5 * * * *"
   concurrencyPolicy: Replace
   startingDeadlineSeconds: 180
   jobTemplate:

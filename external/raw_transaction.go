@@ -4,7 +4,7 @@ import "tax-management/taxDep/types"
 
 type AfterData struct {
 	//Taxid   string  `json:"taxid"`
-	Username string  `json:"username"`
+	Username string  `json:"user_name"`
 	Tinb     string  `json:"tinb"`
 	Tins     string  `json:"tins"`
 	Adis     float64 `json:"adis"`
