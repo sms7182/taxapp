@@ -32,7 +32,7 @@ type InvoiceHeader struct {
 	Tdis     float64 `json:"tdis,omitempty"`
 	Tadis    float64 `json:"tadis,omitempty"`
 	Tvam     float64 `json:"tvam,omitempty"`
-	Todam    float64 `json:"todam,omitempty"`
+	Todam    float64 `json:"todam"`
 	Tbill    float64 `json:"tbill,omitempty"`
 	Tob      int64   `json:"tob,omitempty"`
 	Tinb     string  `json:"tinb,omitempty"`
@@ -57,7 +57,7 @@ type InvoiceItem struct {
 	Cut     string  `json:"cut,omitempty"`
 	Exr     string  `json:"exr,omitempty"`
 	Prdis   float64 `json:"prdis,omitempty"`
-	Dis     float64 `json:"dis,omitempty"`
+	Dis     float64 `json:"dis"`
 	Adis    float64 `json:"adis,omitempty"`
 	Vra     float64 `json:"vra,omitempty"`
 	Vam     float64 `json:"vam,omitempty"`
