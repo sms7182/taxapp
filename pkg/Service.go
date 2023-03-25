@@ -57,7 +57,6 @@ func (s Service) TaxRequestInquiry() {
 				inquiryResult, err := client.InquiryByReferences(&taxProcess[i].TaxRawId, &taxProcess[i].Id, []string{taxProcess[i].OrgReferenceId})
 				if err == nil && len(inquiryResult) > 0 {
 					if inquiryResult[0].Data.Success {
-
 						s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.Completed.String())
 					} else {
 						s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.Failed.String())

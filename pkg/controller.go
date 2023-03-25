@@ -20,5 +20,6 @@ func (cr Controller) health(c *gin.Context) {
 }
 
 func (cr Controller) inquiry(c *gin.Context) {
-	//cr.Service.TaxRequestInquiry()
+	go cr.Service.TaxRequestInquiry()
+	c.JSON(http.StatusOK, gin.H{})
 }
