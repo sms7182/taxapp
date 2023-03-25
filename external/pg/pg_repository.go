@@ -5,6 +5,7 @@ import (
 	"tax-management/external"
 	"tax-management/external/pg/models"
 	models2 "tax-management/external/pg/models"
+	terminal "tax-management/taxDep"
 	"time"
 
 	"gorm.io/gorm"
@@ -31,7 +32,7 @@ func (repository RepositoryImpl) LogReqRes(taxRawId *uint, taxProcessId *uint, r
 	return repository.DB.Create(&taxOfficeRequest).Error
 }
 
-func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType string, taxData external.RawTransaction) (uint, uint, error) {
+func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType string, taxData external.RawTransaction) (uint, uint, string, error) {
 	tax := models2.TaxRawDomain{
 		TaxType:  rawType,
 		UniqueId: taxData.After.Trn + "-" + rawType,
@@ -44,12 +45,17 @@ func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType stri
 			return e
 		}
 		taxProcess.TaxRawId = tax.Id
-		return tx.Create(&taxProcess).Error
+		taxId := terminal.GenerateTaxID(taxData.After.Username, taxProcess.Id)
+		taxProcess.TaxId = &taxId
+		if e := tx.Clauses(clause.Returning{}).Create(&taxProcess).Error; e != nil {
+			return e
+		}
+		return tx.Model(&models2.TaxProcess{}).Where("id = ?", taxProcess.Id).Update("tax_id", taxId).Error
 	})
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, "", err
 	}
-	return tax.Id, taxProcess.Id, nil
+	return tax.Id, taxProcess.Id, *taxProcess.TaxId, nil
 }
 
 func (repository RepositoryImpl) UpdateTaxReferenceId(ctx context.Context, taxProcessId uint, taxOrgReferenceId string) error {

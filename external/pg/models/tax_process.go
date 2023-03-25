@@ -31,6 +31,7 @@ type TaxProcess struct {
 	TaxRawId          uint      `gorm:"column:tax_raw_id"`
 	Status            string    `gorm:"column:status"`
 	TaxOrgReferenceId *string   `gorm:"column:tax_org_reference_id"`
+	TaxId             *string   `gorm:"column:tax_id"`
 }
 
 func (obj *TaxProcess) BeforeCreate(_ *gorm.DB) error {

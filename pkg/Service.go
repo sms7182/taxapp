@@ -18,7 +18,7 @@ type Service struct {
 const layout = "2006-01-02T15:04:05"
 
 func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransaction) error {
-	taxId, taxProcessId, e := s.Repository.InsertTaxData(context.Background(), topicName, data)
+	rawDataId, taxProcessId, taxId, e := s.Repository.InsertTaxData(context.Background(), topicName, data)
 	if e != nil {
 		panic("")
 	}
@@ -29,10 +29,9 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 		s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcessId, models.Unnecessary.String())
 		return nil
 	}
-	taxIdentity := data.After.Taxid[0:6]
-	if client, ok := s.TaxClient[taxIdentity]; ok {
-		invoice := data.ToStandardInvoice()
-		res, err := client.SendInvoices(&taxId, &taxProcessId, invoice)
+	if client, ok := s.TaxClient[data.After.Username]; ok {
+		invoice := data.ToStandardInvoice(taxId)
+		res, err := client.SendInvoices(&rawDataId, &taxProcessId, invoice)
 		if err != nil {
 			panic("")
 		}
@@ -54,7 +53,7 @@ func (s Service) TaxRequestInquiry() {
 		for i := 0; i < len(taxProcess); i++ {
 			var nr external.RawTransaction
 			taxProcess[i].TaxData.AssignTo(&nr)
-			if client, ok := s.TaxClient[nr.After.Taxid]; ok {
+			if client, ok := s.TaxClient[nr.After.Username]; ok {
 				inquiryResult, err := client.InquiryByReferences(&taxProcess[i].TaxRawId, &taxProcess[i].Id, []string{taxProcess[i].OrgReferenceId})
 				if err == nil && len(inquiryResult) > 0 {
 					if inquiryResult[0].Data.Success {
