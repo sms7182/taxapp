@@ -3,7 +3,6 @@ package pkg
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"tax-management/external"
 	"tax-management/external/pg/models"
@@ -65,7 +64,7 @@ func (s Service) TaxRequestInquiry() {
 						s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.Failed.String())
 					}
 				} else {
-					fmt.Printf("inquiry has error:%s", err)
+					s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.Failed.String())
 				}
 			}
 		}
