@@ -6,11 +6,11 @@ kafka:
   consumerTopics:
 
       - "outbox_.public.tax_dom_flight_market_place"
-      - "outbox_.public.tax_bus_other_provider"
-      - "outbox_.public.tax_dom_flight_free_cancellation"
-      - "outbox_.public.tax_dom_flight_markup"
-      - "outbox_.public.tax_dom_hotel_mp"
-      - "outbox_.public.tax_dom_hotel_retail"
+      # - "outbox_.public.tax_bus_other_provider"
+      # - "outbox_.public.tax_dom_flight_free_cancellation"
+      # - "outbox_.public.tax_dom_flight_markup"
+      # - "outbox_.public.tax_dom_hotel_mp"
+      # - "outbox_.public.tax_dom_hotel_retail"
   facility: "beta-tax-management"
 
 taxOrg:
