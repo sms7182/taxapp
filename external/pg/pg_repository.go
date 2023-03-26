@@ -6,6 +6,7 @@ import (
 	"tax-management/external/pg/models"
 	models2 "tax-management/external/pg/models"
 	terminal "tax-management/taxDep"
+	"tax-management/taxDep/types"
 	"time"
 
 	"gorm.io/gorm"
@@ -47,6 +48,7 @@ func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType stri
 		taxProcess.TaxRawId = tax.Id
 		taxId := terminal.GenerateTaxID(taxData.After.Username, taxProcess.Id)
 		taxProcess.TaxId = &taxId
+
 		if e := tx.Clauses(clause.Returning{}).Create(&taxProcess).Error; e != nil {
 			return e
 		}
@@ -57,7 +59,13 @@ func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType stri
 	}
 	return tax.Id, taxProcess.Id, *taxProcess.TaxId, nil
 }
-
+func (repository RepositoryImpl) UpdateTaxProcessStandartInvoice(ctx context.Context, taxProcessId uint, invoice types.StandardInvoice) error {
+	updTax := models2.TaxProcess{
+		Id: taxProcessId,
+	}
+	updTax.StandardInvoice.Set(invoice)
+	return repository.DB.Model(&models2.TaxProcess{}).Where("id = ?", taxProcessId).Updates(updTax).Error
+}
 func (repository RepositoryImpl) UpdateTaxReferenceId(ctx context.Context, taxProcessId uint, taxOrgReferenceId string) error {
 	updTax := models2.TaxProcess{
 		Id:                taxProcessId,

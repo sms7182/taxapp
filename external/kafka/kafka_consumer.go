@@ -3,9 +3,10 @@ package kafka
 import (
 	"encoding/json"
 	"fmt"
+	"tax-management/external"
+
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	log "github.com/sirupsen/logrus"
-	"tax-management/external"
 )
 
 type SyncConsumer struct {
@@ -20,6 +21,7 @@ func (s *SyncConsumer) StartConsuming(topics []string, msgProcessor func(topicNa
 		log.Error(msg)
 		panic(msg)
 	}
+
 	for true {
 		ev := s.Conn.Poll(1000)
 		switch e := ev.(type) {

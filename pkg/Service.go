@@ -31,6 +31,9 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 	}
 	if client, ok := s.TaxClient[data.After.Username]; ok {
 		invoice := data.ToStandardInvoice(taxId)
+		if len(invoice) == 1 {
+			s.Repository.UpdateTaxProcessStandartInvoice(context.Background(), taxProcessId, invoice[0])
+		}
 		res, err := client.SendInvoices(&rawDataId, &taxProcessId, invoice)
 		if err != nil {
 			panic("")

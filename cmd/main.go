@@ -5,9 +5,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/gin-gonic/gin"
-	"github.com/go-redis/redis/v8"
 	"os"
 	kafka2 "tax-management/external/kafka"
 	"tax-management/external/pg"
@@ -15,6 +12,10 @@ import (
 	"tax-management/pkg"
 	terminal "tax-management/taxDep"
 	"tax-management/taxDep/types"
+
+	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
@@ -30,10 +31,11 @@ import (
 )
 
 func main() {
+
+	setUpViper()
 	araJahanUsername := viper.GetString("araJahanUsername")
 	delijanUsername := viper.GetString("delijanUsername")
 
-	setUpViper()
 	db := getGormDb()
 	runDbMigrations()
 	repository := pg.RepositoryImpl{DB: db}
