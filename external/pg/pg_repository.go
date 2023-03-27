@@ -36,7 +36,7 @@ func (repository RepositoryImpl) LogReqRes(taxRawId *uint, taxProcessId *uint, r
 func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType string, taxData external.RawTransaction) (uint, uint, string, error) {
 	tax := models2.TaxRawDomain{
 		TaxType:  rawType,
-		UniqueId: taxData.After.Trn + "-" + rawType,
+		UniqueId: taxData.After.InternalTrn + "-" + rawType,
 	}
 	tax.TaxData.Set(taxData)
 	taxProcess := toTaxProcess(tax, rawType)

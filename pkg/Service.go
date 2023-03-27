@@ -54,8 +54,6 @@ func (s Service) TaxRequestInquiry() {
 		log.Printf("Get Inprogress Taxprocess has error %s", err)
 	} else if len(taxProcess) > 0 {
 		for i := 0; i < len(taxProcess); i++ {
-			//var nr external.RawTransaction
-			//taxProcess[i].TaxData.AssignTo(&nr)
 			userName := taxProcess[i].TaxId[0:6]
 			if client, ok := s.TaxClient[userName]; ok {
 				inquiryResult, err := client.InquiryByReferences(&taxProcess[i].TaxRawId, &taxProcess[i].Id, []string{taxProcess[i].OrgReferenceId})

@@ -3,32 +3,32 @@ package external
 import "tax-management/taxDep/types"
 
 type AfterData struct {
-	//Taxid   string  `json:"taxid"`
-	Username string  `json:"user_name"`
-	Tinb     string  `json:"tinb"`
-	Tins     string  `json:"tins"`
-	Adis     float64 `json:"adis"`
-	Am       float64 `json:"am"`
-	Dis      float64 `json:"dis"`
-	Fee      float64 `json:"fee"`
-	Indatim  int64   `json:"indatim"`
-	Inp      int64   `json:"inp"`
-	Ins      int64   `json:"ins"`
-	Inty     int64   `json:"inty"`
-	Prdis    float64 `json:"prdis"`
-	Setm     int64   `json:"setm"`
-	Sstid    string  `json:"sstid"`
-	Tadis    float64 `json:"tadis"`
-	Tbill    float64 `json:"tbill"`
-	Tdis     float64 `json:"tdis"`
-	Tob      int64   `json:"tob"`
-	Todam    float64 `json:"todam"`
-	Tprdis   float64 `json:"tprdis"`
-	Trn      string  `json:"trn"`
-	Tsstam   float64 `json:"tsstam"`
-	Tvam     float64 `json:"tvam"`
-	Vam      float64 `json:"vam"`
-	Vra      float64 `json:"vra"`
+	Username    string  `json:"user_name"`
+	Tinb        string  `json:"tinb"`
+	Tins        string  `json:"tins"`
+	Adis        float64 `json:"adis"`
+	Am          float64 `json:"am"`
+	Dis         float64 `json:"dis"`
+	Fee         float64 `json:"fee"`
+	Indatim     int64   `json:"indatim"`
+	Inp         int64   `json:"inp"`
+	Ins         int64   `json:"ins"`
+	Inty        int64   `json:"inty"`
+	Prdis       float64 `json:"prdis"`
+	Setm        int64   `json:"setm"`
+	Sstid       string  `json:"sstid"`
+	Tadis       float64 `json:"tadis"`
+	Tbill       float64 `json:"tbill"`
+	Tdis        float64 `json:"tdis"`
+	Tob         int64   `json:"tob"`
+	Todam       float64 `json:"todam"`
+	Tprdis      float64 `json:"tprdis"`
+	InternalTrn string  `json:"internal_trn"`
+	Tsstam      float64 `json:"tsstam"`
+	Tvam        float64 `json:"tvam"`
+	Vam         float64 `json:"vam"`
+	Vra         float64 `json:"vra"`
+	Cap         float64 `json:"cap"`
 }
 type SourceData struct {
 	Connector string      `json:"connector"`
@@ -71,6 +71,7 @@ func (r RawTransaction) ToStandardInvoice(taxId string) []types.StandardInvoice 
 		Tbill:   float64(after.Tbill),
 		Tob:     after.Tob,
 		Tinb:    after.Tinb,
+		Cap:     after.Cap,
 	}
 	items := []types.InvoiceItem{
 		{
@@ -87,13 +88,9 @@ func (r RawTransaction) ToStandardInvoice(taxId string) []types.StandardInvoice 
 	}
 	return []types.StandardInvoice{
 		{
-			Header: header,
-			Body:   items,
-			Payments: []types.InvoicePayments{
-				{
-					Trn: after.Trn,
-				},
-			},
+			Header:     header,
+			Body:       items,
+			Payments:   nil,
 			Extensions: nil,
 		},
 	}
