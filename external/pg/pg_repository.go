@@ -93,14 +93,9 @@ func toTaxProcess(tax models2.TaxRawDomain, rawType string) models2.TaxProcess {
 }
 
 func (repository RepositoryImpl) GetInprogressTaxProcess(ctx context.Context) (taxProcesses []models.RawProcessTaxData, err error) {
-	//fixme avoid redundant join on tables
+
 	var rawPTData []models.RawProcessTaxData
-	sqlStr := `
-				select tp.id, tp.tax_raw_id, tp.tax_org_reference_id, trd.tax_data
-				from tax_process tp
-						 join tax_raw_data trd on tp.tax_raw_id = trd.id
-				where tp.status = 'in-progress' order by tp.created_at limit 256
-                                `
+	sqlStr := `select tp.id, tp.tax_raw_id, tp.tax_org_reference_id,tp.tax_id 	from tax_process tp where tp.status = 'in-progress' order by tp.created_at limit 256`
 	if e := repository.DB.Raw(sqlStr).Scan(&rawPTData).Error; e != nil {
 		return nil, e
 	}
