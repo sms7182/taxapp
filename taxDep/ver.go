@@ -7,8 +7,7 @@ import (
 	"time"
 )
 
-func GenerateTaxID(clientID string, serial uint) string {
-	t := time.Now()
+func GenerateTaxID(clientID string, serial uint, t time.Time) string {
 	daysCount := uint(math.Floor(float64(t.Unix()) / 86400.0))
 	return fmt.Sprintf("%s%05X%010X%d", clientID, daysCount, serial, GetVerhoeff(daysCount, clientID, serial))
 }

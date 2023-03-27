@@ -50,7 +50,7 @@ func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType stri
 		if e := tx.Clauses(clause.Returning{}).Create(&taxProcess).Error; e != nil {
 			return e
 		}
-		taxId := terminal.GenerateTaxID(taxData.After.Username, taxProcess.Id)
+		taxId := terminal.GenerateTaxID(taxData.After.Username, taxProcess.Id, time.UnixMilli(taxData.After.Indatim))
 		taxProcess.TaxId = &taxId
 
 		return tx.Model(&models2.TaxProcess{}).Where("id = ?", taxProcess.Id).Update("tax_id", taxId).Error
