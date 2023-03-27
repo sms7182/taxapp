@@ -24,10 +24,11 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 
 	farvardin1, _ := time.Parse(layout, "2023-03-20T23:59:59")
 
-	if time.UnixMicro(data.After.Indatim).Before(farvardin1) {
+	if time.UnixMilli(data.After.Indatim).Before(farvardin1) {
 		s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcessId, models.Unnecessary.String())
 		return nil
 	}
+
 	if client, ok := s.TaxClient[data.After.Username]; ok {
 		invoice := data.ToStandardInvoice(taxId)
 		if len(invoice) == 1 {
