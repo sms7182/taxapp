@@ -73,7 +73,7 @@ func (t *Transfer) SendPacket(taxRawId *uint, taxProcessId *uint, requestUniqueI
 		httpReq.Header[k] = []string{v}
 	}
 
-	resp, err := t.HttpClientLogger.Do(taxRawId, taxProcessId, requestUniqueId, httpReq, "GetToken")
+	resp, err := t.HttpClientLogger.Do(taxRawId, taxProcessId, requestUniqueId, httpReq, version)
 	if err != nil {
 		return nil, err
 	}
