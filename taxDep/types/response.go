@@ -7,6 +7,17 @@ type SyncResponsePacket struct {
 	SymmetricKey    string                 `json:"symmetricKey"`
 	IV              string                 `json:"iv"`
 	Data            map[string]interface{} `json:"data"`
+	Timestamp       *int64                 `json:"timestamp"`
+}
+
+type SyncResponsePacketInquiry struct {
+	UID             string          `json:"uid"`
+	PacketType      string          `json:"packetType"`
+	EncryptionKeyId string          `json:"encryptionKeyId"`
+	SymmetricKey    string          `json:"symmetricKey"`
+	IV              string          `json:"iv"`
+	Data            []InquiryResult `json:"data"`
+	Timestamp       *int64          `json:"timestamp"`
 }
 
 type ErrorResponse struct {
@@ -44,10 +55,10 @@ type InquiryResult struct {
 }
 
 type InquiryResultData struct {
-	ConfirmationReferenceID string             `json:"confirmationReferenceId"`
-	Error                   []any              `json:"error"`
-	Success                 bool               `json:"success"`
-	Warning                 InquiryDataWarning `json:"warning"`
+	ConfirmationReferenceID string               `json:"confirmationReferenceId"`
+	Error                   []any                `json:"error"`
+	Success                 bool                 `json:"success"`
+	Warning                 []InquiryDataWarning `json:"warning"`
 }
 
 type InquiryDataWarning struct {
@@ -59,4 +70,5 @@ type InquiryDataWarning struct {
 type (
 	AsyncResponse = ResponseList[AsyncResponsePacket]
 	SyncResponse  = Response[SyncResponsePacket]
+	SyncResponse2 = Response[SyncResponsePacketInquiry]
 )
