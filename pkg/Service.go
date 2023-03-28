@@ -41,7 +41,7 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 
 		if len(res.Result) > 0 && len(res.Errors) == 0 {
 			arp := res.Result[0]
-			return s.Repository.UpdateTaxReferenceId(context.Background(), taxProcessId, arp.ReferenceNumber, &data.After.InternalTrn, &arp.UID)
+			return s.Repository.UpdateTaxReferenceId(context.Background(), taxProcessId, arp.ReferenceNumber, &data.After.Trn, &arp.UID)
 		}
 	}
 	return errors.New("failed to process kafka message")
