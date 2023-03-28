@@ -31,7 +31,7 @@ type InvoiceHeader struct {
 	Tprdis   float64 `json:"tprdis,omitempty"`
 	Tdis     float64 `json:"tdis"`
 	Tadis    float64 `json:"tadis,omitempty"`
-	Tvam     float64 `json:"tvam,omitempty"`
+	Tvam     float64 `json:"tvam"`
 	Todam    float64 `json:"todam"`
 	Tbill    float64 `json:"tbill,omitempty"`
 	Tob      int64   `json:"tob,omitempty"`
@@ -59,8 +59,8 @@ type InvoiceItem struct {
 	Prdis   float64 `json:"prdis,omitempty"`
 	Dis     float64 `json:"dis"`
 	Adis    float64 `json:"adis,omitempty"`
-	Vra     float64 `json:"vra,omitempty"`
-	Vam     float64 `json:"vam,omitempty"`
+	Vra     float64 `json:"vra"`
+	Vam     float64 `json:"vam"`
 	Odt     string  `json:"odt,omitempty"`
 	Odr     float64 `json:"odr,omitempty"`
 	Odam    float64 `json:"odam,omitempty"`
