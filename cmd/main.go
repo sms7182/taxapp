@@ -75,7 +75,10 @@ func main() {
 	taxClientMap := make(map[string]pkg.TaxClient)
 	taxClientMap[araJahanUsername] = arajahanTerminal
 	taxClientMap[delijanUsername] = delijanTerminal
-	service := pkg.Service{Repository: repository, TaxClient: taxClientMap}
+	service := pkg.Service{Repository: repository, TaxClient: taxClientMap, UsernameToCompanyName: map[string]string{
+		delijanUsername:  "delijan",
+		araJahanUsername: "arajahan",
+	}}
 	go syncConsumer.StartConsuming(viper.GetStringSlice("kafka.consumerTopics"), service.ProcessKafkaMessage)
 	controller := pkg.Controller{
 		Service: service,

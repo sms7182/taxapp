@@ -36,6 +36,7 @@ type TaxProcess struct {
 	InternalTrn             *string      `gorm:"column:internal_trn"`
 	InquiryUuid             *string      `gorm:"column:inquiry_uuid"`
 	ConfirmationReferenceId *string      `gorm:"confirmation_reference_id"`
+	CompanyName             *string      `gorm:"company_name"`
 	StandardInvoice         pgtype.JSONB `gorm:"type:jsonb;default:'[]'"`
 }
 

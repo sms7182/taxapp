@@ -12,12 +12,13 @@ import (
 type Service struct {
 	Repository Repository
 	TaxClient  map[string]TaxClient
+	UsernameToCompanyName map[string]string
 }
 
 const layout = "2006-01-02T15:04:05"
 
 func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransaction) error {
-	rawDataId, taxProcessId, taxId, e := s.Repository.InsertTaxData(context.Background(), topicName, data)
+	rawDataId, taxProcessId, taxId, e := s.Repository.InsertTaxData(context.Background(), topicName, data, s.UsernameToCompanyName[data.After.Username])
 	if e != nil {
 		panic("")
 	}

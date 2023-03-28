@@ -33,13 +33,13 @@ func (repository RepositoryImpl) LogReqRes(taxRawId *uint, taxProcessId *uint, r
 	return repository.DB.Create(&taxOfficeRequest).Error
 }
 
-func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType string, taxData external.RawTransaction) (uint, uint, string, error) {
+func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType string, taxData external.RawTransaction, companyName string) (uint, uint, string, error) {
 	tax := models2.TaxRawDomain{
 		TaxType:  rawType,
 		UniqueId: taxData.After.Trn + "-" + rawType,
 	}
 	tax.TaxData.Set(taxData)
-	taxProcess := toTaxProcess(tax, rawType)
+	taxProcess := toTaxProcess(tax, rawType, companyName)
 
 	err := repository.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if e := tx.Clauses(clause.Returning{}).Create(&tax).Error; e != nil {
@@ -87,10 +87,11 @@ func (repository RepositoryImpl) UpdateTaxProcessStatus(ctx context.Context, tax
 	return repository.DB.Model(&models2.TaxProcess{}).Where("id = ?", taxProcessId).Updates(updTax).Error
 }
 
-func toTaxProcess(tax models2.TaxRawDomain, rawType string) models2.TaxProcess {
+func toTaxProcess(tax models2.TaxRawDomain, rawType string, companyName string) models2.TaxProcess {
 	taxP := models2.TaxProcess{
 		TaxType:  rawType,
 		TaxRawId: tax.Id,
+		CompanyName: &companyName,
 	}
 	return taxP
 }
