@@ -4,13 +4,13 @@ pgMigrationSource: "postgres://pgsql:Astronomiex1235@192.168.88.101:5432/tax_man
 kafka:
   urls: "192.168.88.143:9092,192.168.88.144:9092,192.168.88.145:9092"
   consumerTopics:
-
-      - "outbox_.public.tax_dom_flight_market_place"
-      # - "outbox_.public.tax_bus_other_provider"
-      # - "outbox_.public.tax_dom_flight_free_cancellation"
-      # - "outbox_.public.tax_dom_flight_markup"
-      # - "outbox_.public.tax_dom_hotel_mp"
-      # - "outbox_.public.tax_dom_hotel_retail"
+    - "dummy-topic"
+    #      - "outbox_.public.tax_dom_flight_market_place"
+    # - "outbox_.public.tax_bus_other_provider"
+    # - "outbox_.public.tax_dom_flight_free_cancellation"
+    # - "outbox_.public.tax_dom_flight_markup"
+    # - "outbox_.public.tax_dom_hotel_mp"
+    # - "outbox_.public.tax_dom_hotel_retail"
   facility: "beta-tax-management"
 
 taxOrg:

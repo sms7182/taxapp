@@ -33,6 +33,8 @@ type TaxProcess struct {
 	Status            string       `gorm:"column:status"`
 	TaxOrgReferenceId *string      `gorm:"column:tax_org_reference_id"`
 	TaxId             *string      `gorm:"column:tax_id"`
+	InternalTrn       *string      `gorm:"column: internal_trn"`
+	InquiryUuid       *string      `gorm:"column: inquiry_uuid"`
 	StandardInvoice   pgtype.JSONB `gorm:"type:jsonb;default:'[]'"`
 }
 
