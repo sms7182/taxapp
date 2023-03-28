@@ -24,18 +24,19 @@ func (ts TaxStatus) String() string {
 }
 
 type TaxProcess struct {
-	Id                uint         `gorm:"autoIncrement,primaryKey"`
-	CreatedAt         time.Time    `gorm:"column:created_at"`
-	UpdatedAt         time.Time    `gorm:"column:updated_at"`
-	TaxUniqueId       string       `gorm:"column:tax_unique_id"`
-	TaxType           string       `gorm:"column:tax_type"`
-	TaxRawId          uint         `gorm:"column:tax_raw_id"`
-	Status            string       `gorm:"column:status"`
-	TaxOrgReferenceId *string      `gorm:"column:tax_org_reference_id"`
-	TaxId             *string      `gorm:"column:tax_id"`
-	InternalTrn       *string      `gorm:"column: internal_trn"`
-	InquiryUuid       *string      `gorm:"column: inquiry_uuid"`
-	StandardInvoice   pgtype.JSONB `gorm:"type:jsonb;default:'[]'"`
+	Id                      uint         `gorm:"autoIncrement,primaryKey"`
+	CreatedAt               time.Time    `gorm:"column:created_at"`
+	UpdatedAt               time.Time    `gorm:"column:updated_at"`
+	TaxUniqueId             string       `gorm:"column:tax_unique_id"`
+	TaxType                 string       `gorm:"column:tax_type"`
+	TaxRawId                uint         `gorm:"column:tax_raw_id"`
+	Status                  string       `gorm:"column:status"`
+	TaxOrgReferenceId       *string      `gorm:"column:tax_org_reference_id"`
+	TaxId                   *string      `gorm:"column:tax_id"`
+	InternalTrn             *string      `gorm:"column:internal_trn"`
+	InquiryUuid             *string      `gorm:"column:inquiry_uuid"`
+	ConfirmationReferenceId *string      `gorm:"confirmation_reference_id"`
+	StandardInvoice         pgtype.JSONB `gorm:"type:jsonb;default:'[]'"`
 }
 
 func (obj *TaxProcess) BeforeCreate(_ *gorm.DB) error {

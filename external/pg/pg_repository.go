@@ -78,10 +78,11 @@ func (repository RepositoryImpl) UpdateTaxReferenceId(ctx context.Context, taxPr
 	return repository.DB.Model(&models2.TaxProcess{}).Where("id = ?", taxProcessId).Updates(updTax).Error
 }
 
-func (repository RepositoryImpl) UpdateTaxProcessStatus(ctx context.Context, taxProcessId uint, status string) error {
+func (repository RepositoryImpl) UpdateTaxProcessStatus(ctx context.Context, taxProcessId uint, status string, confirmationReferenceId *string) error {
 	updTax := models2.TaxProcess{
-		Id:     taxProcessId,
-		Status: status,
+		Id:                      taxProcessId,
+		Status:                  status,
+		ConfirmationReferenceId: confirmationReferenceId,
 	}
 	return repository.DB.Model(&models2.TaxProcess{}).Where("id = ?", taxProcessId).Updates(updTax).Error
 }

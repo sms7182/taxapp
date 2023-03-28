@@ -25,7 +25,7 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 	farvardin1, _ := time.Parse(layout, "2023-03-20T23:59:59")
 
 	if time.UnixMilli(data.After.Indatim).Before(farvardin1) {
-		s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcessId, models.Unnecessary.String())
+		s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcessId, models.Unnecessary.String(), nil)
 		return nil
 	}
 
@@ -58,12 +58,12 @@ func (s Service) TaxRequestInquiry() {
 				inquiryResult, err := client.InquiryByReferences(&taxProcess[i].TaxRawId, &taxProcess[i].Id, []string{taxProcess[i].OrgReferenceId})
 				if err == nil && len(inquiryResult) > 0 {
 					if inquiryResult[0].Data.Success {
-						s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.Completed.String())
+						s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.Completed.String(), &inquiryResult[0].Data.ConfirmationReferenceID)
 					} else {
-						s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.Failed.String())
+						s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.Failed.String(), nil)
 					}
 				} else {
-					s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.Failed.String())
+					s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.Failed.String(), nil)
 				}
 			}
 		}
