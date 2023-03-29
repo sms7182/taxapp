@@ -11,16 +11,15 @@ import (
 type TaxStatus int
 
 const (
-	Sending TaxStatus = iota
-	InProgress
-	Retry
-	Failed
-	Completed
-	Unnecessary
+	TaxStatusSending TaxStatus = iota
+	TaxStatusInProgress
+	TaxStatusFailed
+	TaxStatusCompleted
+	TaxStatusUnnecessary
 )
 
 func (ts TaxStatus) String() string {
-	return []string{"sending", "in-progress", "retry", "failed", "completed", "unnecessary"}[ts]
+	return []string{"sending", "in-progress", "failed", "completed", "unnecessary"}[ts]
 }
 
 type TaxProcess struct {
@@ -48,7 +47,7 @@ func (obj *TaxProcess) BeforeCreate(_ *gorm.DB) error {
 	obj.TaxUniqueId = id.String()
 	obj.CreatedAt = time.Now()
 	obj.UpdatedAt = obj.CreatedAt
-	obj.Status = Sending.String()
+	obj.Status = TaxStatusSending.String()
 
 	return nil
 }

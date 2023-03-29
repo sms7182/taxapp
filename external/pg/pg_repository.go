@@ -33,6 +33,17 @@ func (repository RepositoryImpl) LogReqRes(taxRawId *uint, taxProcessId *uint, r
 	return repository.DB.Create(&taxOfficeRequest).Error
 }
 
+func (repository RepositoryImpl) IsNotProcessable(ctx context.Context, trn string) bool {
+	var tp models2.TaxProcess
+	if err := repository.DB.WithContext(ctx).Where("internal_trn = ?", trn).First(&tp).Error; err == gorm.ErrRecordNotFound {
+		return false
+	} else if err != nil {
+		return true
+	}
+
+	return tp.Status != models2.TaxStatusFailed.String()
+}
+
 func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType string, taxData external.RawTransaction, companyName string) (uint, uint, string, error) {
 	tax := models2.TaxRawDomain{
 		TaxType:  rawType,
@@ -60,7 +71,7 @@ func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType stri
 	}
 	return tax.Id, taxProcess.Id, *taxProcess.TaxId, nil
 }
-func (repository RepositoryImpl) UpdateTaxProcessStandartInvoice(ctx context.Context, taxProcessId uint, invoice types.StandardInvoice) error {
+func (repository RepositoryImpl) UpdateTaxProcessStandardInvoice(ctx context.Context, taxProcessId uint, invoice types.StandardInvoice) error {
 	updTax := models2.TaxProcess{
 		Id: taxProcessId,
 	}
@@ -70,7 +81,7 @@ func (repository RepositoryImpl) UpdateTaxProcessStandartInvoice(ctx context.Con
 func (repository RepositoryImpl) UpdateTaxReferenceId(ctx context.Context, taxProcessId uint, taxOrgReferenceId string, taxOrgInternalTrn *string, taxOrgInquiryUuid *string) error {
 	updTax := models2.TaxProcess{
 		Id:                taxProcessId,
-		Status:            models2.InProgress.String(),
+		Status:            models2.TaxStatusInProgress.String(),
 		TaxOrgReferenceId: &taxOrgReferenceId,
 		InternalTrn:       taxOrgInternalTrn,
 		InquiryUuid:       taxOrgInquiryUuid,
@@ -89,14 +100,14 @@ func (repository RepositoryImpl) UpdateTaxProcessStatus(ctx context.Context, tax
 
 func toTaxProcess(tax models2.TaxRawDomain, rawType string, companyName string) models2.TaxProcess {
 	taxP := models2.TaxProcess{
-		TaxType:  rawType,
-		TaxRawId: tax.Id,
+		TaxType:     rawType,
+		TaxRawId:    tax.Id,
 		CompanyName: &companyName,
 	}
 	return taxP
 }
 
-func (repository RepositoryImpl) GetInprogressTaxProcess(ctx context.Context) (taxProcesses []models.RawProcessTaxData, err error) {
+func (repository RepositoryImpl) GetInProgressTaxProcess(ctx context.Context) (taxProcesses []models.RawProcessTaxData, err error) {
 
 	var rawPTData []models.RawProcessTaxData
 	sqlStr := `select tp.id, tp.tax_raw_id, tp.tax_org_reference_id,tp.tax_id 	from tax_process tp where tp.status = 'in-progress' order by tp.created_at limit 256`

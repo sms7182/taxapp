@@ -10,14 +10,20 @@ import (
 )
 
 type Service struct {
-	Repository Repository
-	TaxClient  map[string]TaxClient
+	Repository            Repository
+	TaxClient             map[string]TaxClient
 	UsernameToCompanyName map[string]string
 }
 
 const layout = "2006-01-02T15:04:05"
 
 func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransaction) error {
+	ctx := context.Background()
+
+	if s.Repository.IsNotProcessable(ctx, data.After.Trn) {
+		return nil
+	}
+
 	rawDataId, taxProcessId, taxId, e := s.Repository.InsertTaxData(context.Background(), topicName, data, s.UsernameToCompanyName[data.After.Username])
 	if e != nil {
 		panic("")
@@ -26,14 +32,14 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 	farvardin1, _ := time.Parse(layout, "2023-03-20T23:59:59")
 
 	if time.UnixMilli(data.After.Indatim).Before(farvardin1) {
-		s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcessId, models.Unnecessary.String(), nil)
+		s.Repository.UpdateTaxProcessStatus(ctx, taxProcessId, models.TaxStatusUnnecessary.String(), nil)
 		return nil
 	}
 
 	if client, ok := s.TaxClient[data.After.Username]; ok {
 		invoice := data.ToStandardInvoice(taxId)
 		if len(invoice) == 1 {
-			s.Repository.UpdateTaxProcessStandartInvoice(context.Background(), taxProcessId, invoice[0])
+			s.Repository.UpdateTaxProcessStandardInvoice(ctx, taxProcessId, invoice[0])
 		}
 		res, err := client.SendInvoices(&rawDataId, &taxProcessId, invoice)
 		if err != nil {
@@ -42,14 +48,14 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 
 		if len(res.Result) > 0 && len(res.Errors) == 0 {
 			arp := res.Result[0]
-			return s.Repository.UpdateTaxReferenceId(context.Background(), taxProcessId, arp.ReferenceNumber, &data.After.Trn, &arp.UID)
+			return s.Repository.UpdateTaxReferenceId(ctx, taxProcessId, arp.ReferenceNumber, &data.After.Trn, &arp.UID)
 		}
 	}
 	return errors.New("failed to process kafka message")
 }
 
 func (s Service) TaxRequestInquiry() {
-	taxProcess, err := s.Repository.GetInprogressTaxProcess(context.Background())
+	taxProcess, err := s.Repository.GetInProgressTaxProcess(context.Background())
 	if err != nil {
 		log.Printf("Get Inprogress Taxprocess has error %s", err)
 	} else if len(taxProcess) > 0 {
@@ -59,12 +65,12 @@ func (s Service) TaxRequestInquiry() {
 				inquiryResult, err := client.InquiryByReferences(&taxProcess[i].TaxRawId, &taxProcess[i].Id, []string{taxProcess[i].OrgReferenceId})
 				if err == nil && len(inquiryResult) > 0 {
 					if inquiryResult[0].Data.Success {
-						s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.Completed.String(), &inquiryResult[0].Data.ConfirmationReferenceID)
+						s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.TaxStatusCompleted.String(), &inquiryResult[0].Data.ConfirmationReferenceID)
 					} else {
-						s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.Failed.String(), nil)
+						s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.TaxStatusFailed.String(), nil)
 					}
 				} else {
-					s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.Failed.String(), nil)
+					s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.TaxStatusFailed.String(), nil)
 				}
 			}
 		}
