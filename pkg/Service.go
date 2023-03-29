@@ -46,7 +46,7 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 		}
 		res, err := client.SendInvoices(&rawDataId, &taxProcessId, invoice)
 		if err != nil {
-			s.Repository.UpdateTaxProcessStatus(ctx, taxProcessId, models.TextStatusUnknown.String(), nil)
+			s.Repository.UpdateTaxProcessStatus(ctx, taxProcessId, models.TaxStatusFailed.String(), nil)
 			return nil
 		}
 		if len(res.Result) > 0 && len(res.Errors) == 0 {

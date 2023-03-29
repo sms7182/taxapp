@@ -37,13 +37,13 @@ func (r RepositoryImpl) LogReqRes(taxRawId *uint, taxProcessId *uint, requestUni
 
 func (r RepositoryImpl) IsNotProcessable(ctx context.Context, trn string) bool {
 	var tp models2.TaxProcess
-	if err := r.DB.WithContext(ctx).Where("internal_trn = ?", trn).First(&tp).Error; err == gorm.ErrRecordNotFound {
+	if err := r.DB.WithContext(ctx).Where("internal_trn = ?", trn).Order("id desc").First(&tp).Error; err == gorm.ErrRecordNotFound {
 		return false
 	} else if err != nil {
 		return true
 	}
 
-	return tp.Status != models2.TaxStatusFailed.String() || tp.Status != models2.TextStatusUnknown.String()
+	return tp.Status != models2.TaxStatusFailed.String()
 }
 
 func (r RepositoryImpl) NumberOfFailureExceeded() bool {
