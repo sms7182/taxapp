@@ -91,7 +91,7 @@ func main() {
 func NewConsumer() *kafka.Consumer {
 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": viper.GetString("kafka.urls"),
-		"group.id":          "tax-management",
+		"group.id":          "tax-management3",
 		"auto.offset.reset": "smallest"})
 	if err != nil {
 		panic("failed to create consumer")
