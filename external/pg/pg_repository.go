@@ -13,11 +13,13 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+const NumberOfFailureLimit = 10
+
 type RepositoryImpl struct {
 	DB *gorm.DB
 }
 
-func (repository RepositoryImpl) LogReqRes(taxRawId *uint, taxProcessId *uint, requestUniqueId string, apiName string, url string, statusCode int, req string, res *string, errorMsg *string) error {
+func (r RepositoryImpl) LogReqRes(taxRawId *uint, taxProcessId *uint, requestUniqueId string, apiName string, url string, statusCode int, req string, res *string, errorMsg *string) error {
 	taxOfficeRequest := models2.TaxOfficeRequestResponseLogModel{
 		TaxRawId:       taxRawId,
 		TaxProcessId:   taxProcessId,
@@ -30,10 +32,27 @@ func (repository RepositoryImpl) LogReqRes(taxRawId *uint, taxProcessId *uint, r
 		Response:       res,
 		ErrorMessage:   errorMsg,
 	}
-	return repository.DB.Create(&taxOfficeRequest).Error
+	return r.DB.Create(&taxOfficeRequest).Error
 }
 
-func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType string, taxData external.RawTransaction, companyName string) (uint, uint, string, error) {
+func (r RepositoryImpl) IsNotProcessable(ctx context.Context, trn string) bool {
+	var tp models2.TaxProcess
+	if err := r.DB.WithContext(ctx).Where("internal_trn = ?", trn).First(&tp).Error; err == gorm.ErrRecordNotFound {
+		return false
+	} else if err != nil {
+		return true
+	}
+
+	return tp.Status != models2.TaxStatusFailed.String()
+}
+
+func (r RepositoryImpl) NumberOfFailureExceeded() bool {
+	var failedCount int64
+	r.DB.Model(&models2.TaxProcess{}).Where("status = ?", models2.TaxStatusFailed.String()).Count(&failedCount)
+	return failedCount > NumberOfFailureLimit
+}
+
+func (r RepositoryImpl) InsertTaxData(ctx context.Context, rawType string, taxData external.RawTransaction, companyName string) (uint, uint, string, error) {
 	tax := models2.TaxRawDomain{
 		TaxType:  rawType,
 		UniqueId: taxData.After.Trn + "-" + rawType,
@@ -41,7 +60,7 @@ func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType stri
 	tax.TaxData.Set(taxData)
 	taxProcess := toTaxProcess(tax, rawType, companyName)
 
-	err := repository.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if e := tx.Clauses(clause.Returning{}).Create(&tax).Error; e != nil {
 			return e
 		}
@@ -53,54 +72,82 @@ func (repository RepositoryImpl) InsertTaxData(ctx context.Context, rawType stri
 		taxId := terminal.GenerateTaxID(taxData.After.Username, taxProcess.Id, time.UnixMilli(taxData.After.Indatim))
 		taxProcess.TaxId = &taxId
 
-		return tx.Model(&models2.TaxProcess{}).Where("id = ?", taxProcess.Id).Update("tax_id", taxId).Error
+		if e := tx.Model(&models2.TaxProcess{}).Where("id = ?", taxProcess.Id).Update("tax_id", taxId).Error; e != nil {
+			return e
+		}
+		tph := models2.ToTaxProcessHistory(taxProcess)
+		return tx.WithContext(ctx).Create(&tph).Error
+
 	})
 	if err != nil {
 		return 0, 0, "", err
 	}
 	return tax.Id, taxProcess.Id, *taxProcess.TaxId, nil
 }
-func (repository RepositoryImpl) UpdateTaxProcessStandartInvoice(ctx context.Context, taxProcessId uint, invoice types.StandardInvoice) error {
+
+func (r RepositoryImpl) UpdateTaxProcessStandardInvoice(ctx context.Context, taxProcessId uint, invoice types.StandardInvoice) error {
 	updTax := models2.TaxProcess{
 		Id: taxProcessId,
 	}
 	updTax.StandardInvoice.Set(invoice)
-	return repository.DB.Model(&models2.TaxProcess{}).Where("id = ?", taxProcessId).Updates(updTax).Error
+	return r.DB.Model(&models2.TaxProcess{}).Where("id = ?", taxProcessId).Updates(updTax).Error
 }
-func (repository RepositoryImpl) UpdateTaxReferenceId(ctx context.Context, taxProcessId uint, taxOrgReferenceId string, taxOrgInternalTrn *string, taxOrgInquiryUuid *string) error {
+
+func (r RepositoryImpl) UpdateTaxReferenceId(ctx context.Context, taxProcessId uint, taxOrgReferenceId string, taxOrgInternalTrn *string, taxOrgInquiryUuid *string) error {
 	updTax := models2.TaxProcess{
 		Id:                taxProcessId,
-		Status:            models2.InProgress.String(),
+		Status:            models2.TaxStatusInProgress.String(),
 		TaxOrgReferenceId: &taxOrgReferenceId,
 		InternalTrn:       taxOrgInternalTrn,
 		InquiryUuid:       taxOrgInquiryUuid,
 	}
-	return repository.DB.Model(&models2.TaxProcess{}).Where("id = ?", taxProcessId).Updates(updTax).Error
+	return r.DB.Transaction(func(tx *gorm.DB) error {
+		if e := tx.Model(&models2.TaxProcess{}).Where("id = ?", taxProcessId).Updates(updTax).Error; e != nil {
+			return e
+		}
+		var updatedTaxProcess models2.TaxProcess
+		if e := tx.Where("id = ?", taxProcessId).First(&updatedTaxProcess).Error; e != nil {
+			return e
+		}
+		tph := models2.ToTaxProcessHistory(updatedTaxProcess)
+		return tx.Create(&tph).Error
+	})
 }
 
-func (repository RepositoryImpl) UpdateTaxProcessStatus(ctx context.Context, taxProcessId uint, status string, confirmationReferenceId *string) error {
+func (r RepositoryImpl) UpdateTaxProcessStatus(ctx context.Context, taxProcessId uint, status string, confirmationReferenceId *string) error {
 	updTax := models2.TaxProcess{
 		Id:                      taxProcessId,
 		Status:                  status,
 		ConfirmationReferenceId: confirmationReferenceId,
 	}
-	return repository.DB.Model(&models2.TaxProcess{}).Where("id = ?", taxProcessId).Updates(updTax).Error
+	return r.DB.Transaction(func(tx *gorm.DB) error {
+		if e := tx.Model(&models2.TaxProcess{}).Where("id = ?", taxProcessId).Updates(updTax).Error; e != nil {
+			return e
+		}
+		var updatedTaxProcess models2.TaxProcess
+		if e := tx.Where("id = ?", taxProcessId).First(&updatedTaxProcess).Error; e != nil {
+			return e
+		}
+		tph := models2.ToTaxProcessHistory(updatedTaxProcess)
+		return tx.Create(&tph).Error
+	})
+
 }
 
 func toTaxProcess(tax models2.TaxRawDomain, rawType string, companyName string) models2.TaxProcess {
 	taxP := models2.TaxProcess{
-		TaxType:  rawType,
-		TaxRawId: tax.Id,
+		TaxType:     rawType,
+		TaxRawId:    tax.Id,
 		CompanyName: &companyName,
 	}
 	return taxP
 }
 
-func (repository RepositoryImpl) GetInprogressTaxProcess(ctx context.Context) (taxProcesses []models.RawProcessTaxData, err error) {
+func (r RepositoryImpl) GetInProgressTaxProcess(ctx context.Context) (taxProcesses []models.RawProcessTaxData, err error) {
 
 	var rawPTData []models.RawProcessTaxData
 	sqlStr := `select tp.id, tp.tax_raw_id, tp.tax_org_reference_id,tp.tax_id 	from tax_process tp where tp.status = 'in-progress' order by tp.created_at limit 256`
-	if e := repository.DB.Raw(sqlStr).Scan(&rawPTData).Error; e != nil {
+	if e := r.DB.Raw(sqlStr).Scan(&rawPTData).Error; e != nil {
 		return nil, e
 	}
 
