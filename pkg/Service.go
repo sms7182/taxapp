@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"tax-management/external"
 	"tax-management/external/pg/models"
@@ -30,7 +31,7 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 
 	rawDataId, taxProcessId, taxId, e := s.Repository.InsertTaxData(context.Background(), topicName, data, s.UsernameToCompanyName[data.After.Username])
 	if e != nil {
-		panic("")
+		panic(fmt.Sprintf("failed, topic: %s, data: %+v", topicName, data))
 	}
 
 	farvardin1, _ := time.Parse(layout, "2023-03-20T23:59:59")
@@ -47,7 +48,7 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 		}
 		res, err := client.SendInvoices(&rawDataId, &taxProcessId, invoice)
 		if err != nil {
-			panic("")
+			panic(fmt.Sprintf("failed, topic: %s, data: %+v", topicName, data))
 		}
 		if len(res.Result) > 0 && len(res.Errors) == 0 {
 			arp := res.Result[0]
