@@ -20,9 +20,9 @@ const layout = "2006-01-02T15:04:05"
 func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransaction) error {
 	ctx := context.Background()
 
-	if s.Repository.NumberOfFailureExceeded() {
-		panic("number of failure exceeded")
-	}
+	//if s.Repository.NumberOfFailureExceeded() {
+	//	panic("number of failure exceeded")
+	//}
 
 	if s.Repository.IsNotProcessable(ctx, data.After.Trn) {
 		return nil
