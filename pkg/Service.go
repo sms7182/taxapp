@@ -29,16 +29,14 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 		return nil
 	}
 
-	rawDataId, taxProcessId, taxId, e := s.Repository.InsertTaxData(context.Background(), topicName, data, s.UsernameToCompanyName[data.After.Username])
-	if e != nil {
-		panic(fmt.Sprintf("failed, topic: %s, data: %+v", topicName, data))
-	}
-
 	farvardin1, _ := time.Parse(layout, "2023-03-20T23:59:59")
 
 	if time.UnixMilli(data.After.Indatim).Before(farvardin1) {
-		s.Repository.UpdateTaxProcessStatus(ctx, taxProcessId, models.TaxStatusUnnecessary.String(), nil)
 		return nil
+	}
+	rawDataId, taxProcessId, taxId, e := s.Repository.InsertTaxData(context.Background(), topicName, data, s.UsernameToCompanyName[data.After.Username])
+	if e != nil {
+		panic(fmt.Sprintf("failed, topic: %s, data: %+v", topicName, data))
 	}
 
 	if client, ok := s.TaxClient[data.After.Username]; ok {
