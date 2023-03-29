@@ -4,7 +4,6 @@ import (
 	"context"
 	"tax-management/external"
 	"tax-management/external/pg/models"
-	"tax-management/taxDep/types"
 )
 
 type Repository interface {
@@ -15,5 +14,4 @@ type Repository interface {
 	UpdateTaxReferenceId(ctx context.Context, taxProcessId uint, taxOrgReferenceId string, taxOrgInternalTrn *string, taxOrgInquiryUuid *string) error
 	GetInProgressTaxProcess(ctx context.Context) (taxProcesses []models.RawProcessTaxData, err error)
 	UpdateTaxProcessStatus(ctx context.Context, taxProcessId uint, status string, confirmationReferenceId *string) error
-	UpdateTaxProcessStandardInvoice(ctx context.Context, taxProcessId uint, invoice types.StandardInvoice) error
 }

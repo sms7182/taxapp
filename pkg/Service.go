@@ -42,14 +42,10 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 
 	if client, ok := s.TaxClient[data.After.Username]; ok {
 		invoice := data.ToStandardInvoice(taxId)
-		if len(invoice) == 1 {
-			s.Repository.UpdateTaxProcessStandardInvoice(ctx, taxProcessId, invoice[0])
-		}
 		res, err := client.SendInvoices(&rawDataId, &taxProcessId, invoice)
 		if err != nil {
 			panic("")
 		}
-
 		if len(res.Result) > 0 && len(res.Errors) == 0 {
 			arp := res.Result[0]
 			return s.Repository.UpdateTaxReferenceId(ctx, taxProcessId, arp.ReferenceNumber, &data.After.Trn, &arp.UID)
