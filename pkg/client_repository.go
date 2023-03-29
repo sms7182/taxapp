@@ -4,9 +4,11 @@ import (
 	"context"
 	"tax-management/external"
 	"tax-management/external/pg/models"
+	"tax-management/taxDep/types"
 )
 
 type Repository interface {
+	UpdateTaxProcessStandardInvoice(ctx context.Context, taxProcessId uint, invoice types.StandardInvoice) error
 	LogReqRes(taxRawId *uint, taxProcessId *uint, requestUniqueId string, apiName string, url string, statusCode int, req string, res *string, errorMsg *string) error
 	IsNotProcessable(ctx context.Context, trn string) bool
 	NumberOfFailureExceeded() bool

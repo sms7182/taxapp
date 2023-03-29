@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/jackc/pgtype"
 	"time"
 
 	"github.com/gofrs/uuid"
@@ -22,19 +23,20 @@ func (ts TaxStatus) String() string {
 }
 
 type TaxProcess struct {
-	Id                      uint      `gorm:"autoIncrement,primaryKey"`
-	CreatedAt               time.Time `gorm:"column:created_at"`
-	UpdatedAt               time.Time `gorm:"column:updated_at"`
-	TaxUniqueId             string    `gorm:"column:tax_unique_id"`
-	TaxType                 string    `gorm:"column:tax_type"`
-	TaxRawId                uint      `gorm:"column:tax_raw_id"`
-	Status                  string    `gorm:"column:status"`
-	TaxOrgReferenceId       *string   `gorm:"column:tax_org_reference_id"`
-	TaxId                   *string   `gorm:"column:tax_id"`
-	InternalTrn             *string   `gorm:"column:internal_trn"`
-	InquiryUuid             *string   `gorm:"column:inquiry_uuid"`
-	ConfirmationReferenceId *string   `gorm:"confirmation_reference_id"`
-	CompanyName             *string   `gorm:"company_name"`
+	Id                      uint         `gorm:"autoIncrement,primaryKey"`
+	CreatedAt               time.Time    `gorm:"column:created_at"`
+	UpdatedAt               time.Time    `gorm:"column:updated_at"`
+	TaxUniqueId             string       `gorm:"column:tax_unique_id"`
+	TaxType                 string       `gorm:"column:tax_type"`
+	TaxRawId                uint         `gorm:"column:tax_raw_id"`
+	Status                  string       `gorm:"column:status"`
+	TaxOrgReferenceId       *string      `gorm:"column:tax_org_reference_id"`
+	TaxId                   *string      `gorm:"column:tax_id"`
+	InternalTrn             *string      `gorm:"column:internal_trn"`
+	InquiryUuid             *string      `gorm:"column:inquiry_uuid"`
+	ConfirmationReferenceId *string      `gorm:"confirmation_reference_id"`
+	CompanyName             *string      `gorm:"company_name"`
+	StandardInvoice         pgtype.JSONB `gorm:"type:jsonb;default:'[]'"`
 }
 
 func (obj *TaxProcess) BeforeCreate(_ *gorm.DB) error {
@@ -55,19 +57,20 @@ func (TaxProcess) TableName() string {
 }
 
 type TaxProcessHistory struct {
-	Id                      uint      `gorm:"autoIncrement,primaryKey"`
-	TaxProcessId            uint      `gorm:"column:tax_process_id"`
-	CreatedAt               time.Time `gorm:"column:created_at"`
-	TaxUniqueId             string    `gorm:"column:tax_unique_id"`
-	TaxType                 string    `gorm:"column:tax_type"`
-	TaxRawId                uint      `gorm:"column:tax_raw_id"`
-	Status                  string    `gorm:"column:status"`
-	TaxOrgReferenceId       *string   `gorm:"column:tax_org_reference_id"`
-	TaxId                   *string   `gorm:"column:tax_id"`
-	InternalTrn             *string   `gorm:"column:internal_trn"`
-	InquiryUuid             *string   `gorm:"column:inquiry_uuid"`
-	ConfirmationReferenceId *string   `gorm:"confirmation_reference_id"`
-	CompanyName             *string   `gorm:"company_name"`
+	Id                      uint         `gorm:"autoIncrement,primaryKey"`
+	TaxProcessId            uint         `gorm:"column:tax_process_id"`
+	CreatedAt               time.Time    `gorm:"column:created_at"`
+	TaxUniqueId             string       `gorm:"column:tax_unique_id"`
+	TaxType                 string       `gorm:"column:tax_type"`
+	TaxRawId                uint         `gorm:"column:tax_raw_id"`
+	Status                  string       `gorm:"column:status"`
+	TaxOrgReferenceId       *string      `gorm:"column:tax_org_reference_id"`
+	TaxId                   *string      `gorm:"column:tax_id"`
+	InternalTrn             *string      `gorm:"column:internal_trn"`
+	InquiryUuid             *string      `gorm:"column:inquiry_uuid"`
+	ConfirmationReferenceId *string      `gorm:"confirmation_reference_id"`
+	CompanyName             *string      `gorm:"company_name"`
+	StandardInvoice         pgtype.JSONB `gorm:"type:jsonb;default:'[]'"`
 }
 
 func (TaxProcessHistory) TableName() string {
@@ -88,5 +91,6 @@ func ToTaxProcessHistory(tp TaxProcess) TaxProcessHistory {
 		InquiryUuid:             tp.InquiryUuid,
 		ConfirmationReferenceId: tp.ConfirmationReferenceId,
 		CompanyName:             tp.CompanyName,
+		StandardInvoice:         tp.StandardInvoice,
 	}
 }
