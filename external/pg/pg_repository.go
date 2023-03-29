@@ -43,7 +43,7 @@ func (r RepositoryImpl) IsNotProcessable(ctx context.Context, trn string) bool {
 		return true
 	}
 
-	return tp.Status != models2.TaxStatusFailed.String()
+	return tp.Status != models2.TaxStatusFailed.String() || tp.Status != models2.TextStatusUnknown.String()
 }
 
 func (r RepositoryImpl) NumberOfFailureExceeded() bool {

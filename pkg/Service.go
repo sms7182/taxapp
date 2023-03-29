@@ -48,7 +48,8 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 		}
 		res, err := client.SendInvoices(&rawDataId, &taxProcessId, invoice)
 		if err != nil {
-			panic(fmt.Sprintf("failed, topic: %s, data: %+v", topicName, data))
+			s.Repository.UpdateTaxProcessStatus(ctx, taxProcessId, models.TextStatusUnknown.String(), nil)
+			return nil
 		}
 		if len(res.Result) > 0 && len(res.Errors) == 0 {
 			arp := res.Result[0]
