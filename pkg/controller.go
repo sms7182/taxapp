@@ -13,9 +13,15 @@ type Controller struct {
 func (cr Controller) SetRoutes(e *gin.Engine) {
 	e.GET("/health", cr.health)
 	e.GET("/tax/fire_inquiry", cr.inquiry)
+	e.GET("/failedNotify", cr.failedNotify)
 }
 
 func (cr Controller) health(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{})
+}
+
+func (cr Controller) failedNotify(c *gin.Context) {
+	go cr.Service.NotifyFailedTax()
 	c.JSON(http.StatusOK, gin.H{})
 }
 

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	kafka2 "tax-management/external/kafka"
+	"tax-management/external/notification"
 	"tax-management/external/pg"
 	redis2 "tax-management/external/redis"
 	"tax-management/pkg"
@@ -78,6 +79,10 @@ func main() {
 	service := pkg.Service{Repository: repository, TaxClient: taxClientMap, UsernameToCompanyName: map[string]string{
 		delijanUsername:  "delijan",
 		araJahanUsername: "arajahan",
+	}, NotificationClient: notification.NotificationClientImpl{
+		From:      viper.GetString("notify.from"),
+		NotifyUrl: viper.GetString("notify.url"),
+		To:        viper.GetString("notify.to"),
 	}}
 	go syncConsumer.StartConsuming(viper.GetStringSlice("kafka.consumerTopics"), service.ProcessKafkaMessage)
 	controller := pkg.Controller{

@@ -154,3 +154,13 @@ func (r RepositoryImpl) GetInProgressTaxProcess(ctx context.Context) (taxProcess
 	return rawPTData, nil
 
 }
+
+func (r RepositoryImpl) GetFailedTaxProcess(ctx context.Context) (faileds []models.FailedTaxProcess, err error) {
+	var failedTaxProcess []models.FailedTaxProcess
+	sqlStr := `select tp.internal_trn,tp.id,torrl.response from tax_process tp join tax_office_request_response_log torrl on tp.id=torrl.tax_process_id
+	where tp.status='failed' and torrl.api_name='INQUIRY_BY_REFERENCE_NUMBER'`
+	if e := r.DB.Raw(sqlStr).Scan(&failedTaxProcess).Error; e != nil {
+		return nil, e
+	}
+	return failedTaxProcess, err
+}
