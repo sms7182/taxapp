@@ -58,7 +58,7 @@ func (r RepositoryImpl) InsertTaxData(ctx context.Context, rawType string, taxDa
 		UniqueId: taxData.After.Trn + "-" + rawType,
 	}
 	tax.TaxData.Set(taxData)
-	taxProcess := toTaxProcess(tax, rawType, companyName)
+	taxProcess := toTaxProcess(tax, rawType, companyName, taxData)
 
 	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if e := tx.Clauses(clause.Returning{}).Create(&tax).Error; e != nil {
@@ -134,11 +134,12 @@ func (r RepositoryImpl) UpdateTaxProcessStatus(ctx context.Context, taxProcessId
 
 }
 
-func toTaxProcess(tax models2.TaxRawDomain, rawType string, companyName string) models2.TaxProcess {
+func toTaxProcess(tax models2.TaxRawDomain, rawType string, companyName string, rawTransaction external.RawTransaction) models2.TaxProcess {
 	taxP := models2.TaxProcess{
 		TaxType:     rawType,
 		TaxRawId:    tax.Id,
 		CompanyName: &companyName,
+		InternalTrn: &rawTransaction.After.Trn,
 	}
 	return taxP
 }

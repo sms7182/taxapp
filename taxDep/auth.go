@@ -24,7 +24,7 @@ func (t *Terminal) GetToken(taxRawId *uint, taxProcessId *uint, requestUniqueId 
 	}
 
 	t.token = resp.Result.Data["token"].(string)
-	t.exp = time.UnixMilli(int64(resp.Result.Data["expiresIn"].(float64)))
+	t.exp = time.Now().Add(1 * time.Hour)
 
 	return t.token, nil
 }
