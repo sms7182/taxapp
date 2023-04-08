@@ -177,3 +177,11 @@ func (r RepositoryImpl) UpdateNotifyFailedOfTaxProcess(ctx context.Context, ids 
 
 	return nil
 }
+
+func (r RepositoryImpl) GetByTaxRawId(ctx context.Context, taxRawId uint) (*models2.TaxRawDomain, error) {
+	var t models2.TaxRawDomain
+	if e := r.DB.WithContext(ctx).Where("id = ?", taxRawId).First(&t).Error; e != nil {
+		return nil, e
+	}
+	return &t, nil
+}

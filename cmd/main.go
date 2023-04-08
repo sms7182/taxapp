@@ -76,6 +76,7 @@ func main() {
 	taxClientMap := make(map[string]pkg.TaxClient)
 	taxClientMap[araJahanUsername] = arajahanTerminal
 	taxClientMap[delijanUsername] = delijanTerminal
+	producer := NewProducer()
 	service := pkg.Service{Repository: repository, TaxClient: taxClientMap, UsernameToCompanyName: map[string]string{
 		delijanUsername:  "delijan",
 		araJahanUsername: "arajahan",
@@ -83,7 +84,7 @@ func main() {
 		From:      viper.GetString("notify.from"),
 		NotifyUrl: viper.GetString("notify.url"),
 		To:        viper.GetString("notify.to"),
-	}}
+	}, KafkaProducer: producer}
 	go syncConsumer.StartConsuming(viper.GetStringSlice("kafka.consumerTopics"), service.ProcessKafkaMessage)
 	controller := pkg.Controller{
 		Service: service,
@@ -102,6 +103,14 @@ func NewConsumer() *kafka.Consumer {
 		panic("failed to create consumer")
 	}
 	return consumer
+}
+
+func NewProducer() *kafka2.Producer {
+	pr, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": viper.GetString("kafka.urls")})
+	if err != nil {
+		panic("failed to create consumer")
+	}
+	return &kafka2.Producer{pr}
 }
 
 func getPrivateKey(pvPath string) (*rsa.PrivateKey, *rsa.PublicKey, error) {
