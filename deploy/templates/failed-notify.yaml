@@ -3,7 +3,7 @@ kind: CronJob
 metadata:
   name: {{ template "project.fullname" . }}-failed-notify-cron-job
 spec:
-  schedule: "0/5 * * * *"
+  schedule: "0 0 12 * * ?"
   concurrencyPolicy: Replace
   startingDeadlineSeconds: 180
   jobTemplate:
