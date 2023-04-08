@@ -29,7 +29,7 @@ func (nc NotificationClientImpl) FailedNotify(ctx context.Context, failedBodys [
 	var body bytes.Buffer
 	var fmessages []string
 	for i := 0; i < len(failedBodys); i++ {
-		fm := fmt.Sprintf("Message:%s,Int_Trn:%s", failedBodys[i].FailedMessage, failedBodys[i].Int_Trn)
+		fm := fmt.Sprintf("Int_Trn:%s,ErrorMessages:%s", failedBodys[i].Int_Trn, failedBodys[i].FailedMessage)
 		fmessages = append(fmessages, fm)
 	}
 	parsedTemplate.Execute(&body, notify.FailedTaxRequest{

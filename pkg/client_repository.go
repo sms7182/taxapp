@@ -17,4 +17,5 @@ type Repository interface {
 	GetInProgressTaxProcess(ctx context.Context) (taxProcesses []models.RawProcessTaxData, err error)
 	UpdateTaxProcessStatus(ctx context.Context, taxProcessId uint, status string, confirmationReferenceId *string) error
 	GetFailedTaxProcess(ctx context.Context) (failedTaxProcess []models.FailedTaxProcess, err error)
+	UpdateNotifyFailedOfTaxProcess(ctx context.Context, ids []uint) error
 }

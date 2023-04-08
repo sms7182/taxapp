@@ -22,7 +22,7 @@ delijanUsername: "A11T12"
 notify:
   from: "mojtaba.safavi@snapptrip.com"
   url: "http://localhost:9001/notify"
-  to: "sms7182@gmail.com"
+  to: "sms7182@gmail.com,atefe.re@gmail.com,mahdipaymard23@gmail.com,hamidebrahimi1998@gmail.com,marzieheskandari19@gmail.com,iman.ravakhah@snapptrip.com,maryam.vatani@snapptrip.com"
 
 redis:
   url: "192.168.88.108:6379"
