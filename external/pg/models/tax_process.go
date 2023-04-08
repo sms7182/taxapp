@@ -1,8 +1,9 @@
 package models
 
 import (
-	"github.com/jackc/pgtype"
 	"time"
+
+	"github.com/jackc/pgtype"
 
 	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
@@ -70,6 +71,7 @@ type TaxProcessHistory struct {
 	ConfirmationReferenceId *string      `gorm:"confirmation_reference_id"`
 	CompanyName             *string      `gorm:"company_name"`
 	StandardInvoice         pgtype.JSONB `gorm:"type:jsonb;default:'[]'"`
+	FailedNotify            bool         `gorm:"failed_notify"`
 }
 
 func (TaxProcessHistory) TableName() string {

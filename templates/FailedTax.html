@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h3>{{.Message}}</h3>
+<ul>
+    {{range $index, $element := .Faileds}}
+    <li>{{ $element }}</li>
+    {{end}}
+</ul>
+</body>
+</html>
