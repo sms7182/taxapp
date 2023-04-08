@@ -1,7 +1,7 @@
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:
-  name: {{ template "project.fullname" . }}-failedNotify-cron-job
+  name: {{ template "project.fullname" . }}-failed-notify-cron-job
 spec:
   schedule: "0 0 12 * * ?"
   concurrencyPolicy: Replace
