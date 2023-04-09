@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -14,6 +15,7 @@ func (cr Controller) SetRoutes(e *gin.Engine) {
 	e.GET("/health", cr.health)
 	e.GET("/tax/fire_inquiry", cr.inquiry)
 	e.GET("/failedNotify", cr.failedNotify)
+	e.GET("/retryInvoice/:taxRawId", cr.retryInvoice)
 }
 
 func (cr Controller) health(c *gin.Context) {
@@ -27,5 +29,19 @@ func (cr Controller) failedNotify(c *gin.Context) {
 
 func (cr Controller) inquiry(c *gin.Context) {
 	go cr.Service.TaxRequestInquiry()
+	c.JSON(http.StatusOK, gin.H{})
+}
+
+func (cr Controller) retryInvoice(c *gin.Context) {
+	taxRawIdStr := c.Param("taxRawId")
+	taxRawId, err := strconv.Atoi(taxRawIdStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{})
+		return
+	}
+	if e := cr.Service.RetryInvoice(c, uint(taxRawId)); e != nil {
+		c.JSON(http.StatusInternalServerError, e.Error())
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{})
 }
