@@ -6,5 +6,6 @@ COPY app /opt
 COPY db/migrations/*.sql /opt/db/migrations/
 COPY sign_ara.key /opt
 COPY sign_delijan.key /opt
+COPY templates /opt/templates
 WORKDIR /opt
 CMD ["./app"]

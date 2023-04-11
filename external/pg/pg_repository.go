@@ -158,8 +158,13 @@ func (r RepositoryImpl) GetInProgressTaxProcess(ctx context.Context) (taxProcess
 
 func (r RepositoryImpl) GetFailedTaxProcess(ctx context.Context) (faileds []models.FailedTaxProcess, err error) {
 	var failedTaxProcess []models.FailedTaxProcess
-	sqlStr := `select tp.internal_trn,tp.id,((torrl.response::json->'result')::json->'data'->0)::json->'data' as response from tax_process tp join tax_office_request_response_log torrl on tp.id=torrl.tax_process_id
-	where  tp.status='failed' and tp.failed_notify=false and torrl.api_name='INQUIRY_BY_REFERENCE_NUMBER' `
+	sqlStr := `select tp.internal_trn, tp.id, ((torrl.response::json -> 'result')::json -> 'data' -> 0)::json -> 'data' as response
+from tax_process tp
+         join tax_office_request_response_log torrl on tp.id = torrl.tax_process_id
+where tp.status = 'failed'
+  and tp.failed_notify = false
+  and torrl.api_name = 'INQUIRY_BY_REFERENCE_NUMBER'
+  and not exists(select * from tax_process where status != 'failed' and tp.internal_trn = internal_trn)`
 	if e := r.DB.Raw(sqlStr).Scan(&failedTaxProcess).Error; e != nil {
 		return nil, e
 	}
