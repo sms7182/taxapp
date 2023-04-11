@@ -30,7 +30,7 @@ func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransact
 	//	panic("number of failure exceeded")
 	//}
 
-	if s.Repository.IsNotProcessable(ctx, data.After.Trn) {
+	if s.Repository.IsNotProcessable(ctx, topicName, data.After.Trn) {
 		return nil
 	}
 
@@ -88,7 +88,9 @@ func (s Service) TaxRequestInquiry() {
 func (service Service) NotifyFailedTax() {
 	taxProcess, err := service.Repository.GetFailedTaxProcess(context.Background())
 	var taxProcessIds []uint
-	if err == nil && len(taxProcess) > 0 {
+	ln := len(taxProcess)
+	fmt.Printf("len taxprocess is %v", ln)
+	if err == nil && ln > 0 {
 		var failedBodys []notify.FailedBody
 		for i := 0; i < len(taxProcess); i++ {
 			taxProcessIds = append(taxProcessIds, taxProcess[i].Id)

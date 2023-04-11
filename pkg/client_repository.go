@@ -10,7 +10,7 @@ import (
 type Repository interface {
 	UpdateTaxProcessStandardInvoice(ctx context.Context, taxProcessId uint, invoice types.StandardInvoice) error
 	LogReqRes(taxRawId *uint, taxProcessId *uint, requestUniqueId string, apiName string, url string, statusCode int, req string, res *string, errorMsg *string) error
-	IsNotProcessable(ctx context.Context, trn string) bool
+	IsNotProcessable(ctx context.Context, topic string, trn string) bool
 	NumberOfFailureExceeded() bool
 	InsertTaxData(ctx context.Context, rawType string, taxData external.RawTransaction, companyName string) (rawDataId uint, taxProcessId uint, taxId string, err error)
 	UpdateTaxReferenceId(ctx context.Context, taxProcessId uint, taxOrgReferenceId string, taxOrgInternalTrn *string, taxOrgInquiryUuid *string) error

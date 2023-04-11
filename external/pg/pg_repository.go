@@ -35,9 +35,9 @@ func (r RepositoryImpl) LogReqRes(taxRawId *uint, taxProcessId *uint, requestUni
 	return r.DB.Create(&taxOfficeRequest).Error
 }
 
-func (r RepositoryImpl) IsNotProcessable(ctx context.Context, trn string) bool {
+func (r RepositoryImpl) IsNotProcessable(ctx context.Context, topic string, trn string) bool {
 	var tp models2.TaxProcess
-	if err := r.DB.WithContext(ctx).Where("internal_trn = ?", trn).Last(&tp).Error; err == gorm.ErrRecordNotFound {
+	if err := r.DB.WithContext(ctx).Where("internal_trn = ? and tax_type= ?", trn, topic).Last(&tp).Error; err == gorm.ErrRecordNotFound {
 		return false
 	} else if err != nil {
 		return true
@@ -164,7 +164,7 @@ from tax_process tp
 where tp.status = 'failed'
   and tp.failed_notify = false
   and torrl.api_name = 'INQUIRY_BY_REFERENCE_NUMBER'
-  and not exists(select * from tax_process where status != 'failed' and tp.internal_trn = internal_trn)`
+  and not exists(select * from tax_process where status != 'failed' and tp.internal_trn = internal_trn and tp.tax_type=tax_type)`
 	if e := r.DB.Raw(sqlStr).Scan(&failedTaxProcess).Error; e != nil {
 		return nil, e
 	}
