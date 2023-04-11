@@ -30,6 +30,7 @@ type AfterData struct {
 	Vra      float64 `json:"vra"`
 	Cap      float64 `json:"cap"`
 	Bid      string  `json:"bid"`
+	Insp     float64 `json:"insp"`
 }
 type SourceData struct {
 	Connector string      `json:"connector"`
@@ -74,6 +75,7 @@ func (r RawTransaction) ToStandardInvoice(taxId string) []types.StandardInvoice 
 		Tinb:    after.Tinb,
 		Cap:     after.Cap,
 		Bid:     after.Bid,
+		Insp:    after.Insp,
 	}
 	items := []types.InvoiceItem{
 		{
