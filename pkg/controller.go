@@ -16,6 +16,7 @@ func (cr Controller) SetRoutes(e *gin.Engine) {
 	e.GET("/tax/fire_inquiry", cr.inquiry)
 	e.GET("/failedNotify", cr.failedNotify)
 	e.GET("/retryInvoice/:taxRawId", cr.retryInvoice)
+	e.GET("/autoRetryInvoice", cr.autoRetry)
 }
 
 func (cr Controller) health(c *gin.Context) {
@@ -29,6 +30,11 @@ func (cr Controller) failedNotify(c *gin.Context) {
 
 func (cr Controller) inquiry(c *gin.Context) {
 	go cr.Service.TaxRequestInquiry()
+	c.JSON(http.StatusOK, gin.H{})
+}
+
+func (cr Controller) autoRetry(c *gin.Context) {
+	go cr.Service.AutoRetry(c)
 	c.JSON(http.StatusOK, gin.H{})
 }
 

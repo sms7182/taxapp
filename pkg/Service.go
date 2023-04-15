@@ -125,3 +125,15 @@ func (s Service) RetryInvoice(ctx context.Context, id uint) error {
 	}
 	return s.KafkaProducer.Produce(taxRaw.TaxType, taxRaw.TaxData.Bytes)
 }
+
+func (s Service) AutoRetry(ctx context.Context) {
+	taxRaws, err := s.Repository.GetReadyTaxToRetry(ctx)
+	if err != nil {
+		fmt.Printf("retry data failed")
+	}
+
+	for i := 0; i < len(taxRaws); i++ {
+		s.KafkaProducer.Produce(taxRaws[i].TaxType, taxRaws[i].TaxData.Bytes)
+	}
+
+}

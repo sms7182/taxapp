@@ -19,4 +19,5 @@ type Repository interface {
 	GetFailedTaxProcess(ctx context.Context) (failedTaxProcess []models.FailedTaxProcess, err error)
 	UpdateNotifyFailedOfTaxProcess(ctx context.Context, ids []uint) error
 	GetByTaxRawId(ctx context.Context, taxProcessId uint) (*models.TaxRawDomain, error)
+	GetReadyTaxToRetry(ctx context.Context) ([]models.TaxRawDomain, error)
 }

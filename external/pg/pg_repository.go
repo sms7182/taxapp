@@ -190,3 +190,20 @@ func (r RepositoryImpl) GetByTaxRawId(ctx context.Context, taxRawId uint) (*mode
 	}
 	return &t, nil
 }
+
+func (r RepositoryImpl) GetReadyTaxToRetry(ctx context.Context) ([]models.TaxRawDomain, error) {
+	var readyToRetry []models.TaxRawDomain
+	sqlStr := `select trd.* from tax_process tp 
+	join  tax_office_request_response_log torrl on tp.id = torrl.tax_process_id
+	join tax_raw_data trd on trd.id=tp.tax_raw_id
+	where tp.status='failed'  
+	
+	  and torrl.api_name = 'SendInvoice'
+	  and torrl.status_code=403
+	  and tp.internal_trn is not null
+	 and not exists(select * from tax_process where status != 'failed' and tp.internal_trn = internal_trn and tp.tax_type=tax_type) `
+	if e := r.DB.Raw(sqlStr).Scan(&readyToRetry).Error; e != nil {
+		return nil, e
+	}
+	return readyToRetry, nil
+}
