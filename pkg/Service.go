@@ -137,3 +137,26 @@ func (s Service) AutoRetry(ctx context.Context) {
 	}
 
 }
+
+func (s Service) GetTaxProcess(ctx context.Context, id uint) (*models.TaxProcessViewModel, error) {
+	tp, err := s.Repository.GetTaxProcess(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	tpvm := models.TaxProcessViewModel{
+		Id:          tp.Id,
+		CreatedAt:   tp.CreatedAt,
+		UpdatedAt:   tp.UpdatedAt,
+		TaxType:     tp.TaxType,
+		Status:      tp.Status,
+		TaxId:       tp.TaxId,
+		InternalTrn: tp.InternalTrn,
+		CompanyName: tp.CompanyName,
+	}
+
+	var result types.StandardInvoice
+	tp.StandardInvoice.AssignTo(&result)
+	tpvm.StandardInvoice = result
+	return &tpvm, err
+
+}

@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 
@@ -17,10 +18,26 @@ func (cr Controller) SetRoutes(e *gin.Engine) {
 	e.GET("/failedNotify", cr.failedNotify)
 	e.GET("/retryInvoice/:taxRawId", cr.retryInvoice)
 	e.GET("/autoRetryInvoice", cr.autoRetry)
+	e.GET("/taxprocess/:id", cr.getTaxProcess)
 }
 
 func (cr Controller) health(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
+}
+
+func (cr Controller) getTaxProcess(c *gin.Context) {
+	idStr := c.Param("id")
+	taxProcessId, err := strconv.Atoi(idStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{})
+		return
+	}
+	tp, err := cr.Service.GetTaxProcess(context.Background(), uint(taxProcessId))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+	}
+	c.JSON(http.StatusOK, tp)
+
 }
 
 func (cr Controller) failedNotify(c *gin.Context) {

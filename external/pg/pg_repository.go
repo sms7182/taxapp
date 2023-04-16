@@ -171,6 +171,15 @@ where tp.status = 'failed'
 	return failedTaxProcess, err
 }
 
+func (r RepositoryImpl) GetTaxProcess(ctx context.Context, id uint) (*models.TaxProcess, error) {
+	var taxProcess models.TaxProcess
+
+	if e := r.DB.Model(models.TaxProcess{}).Where("id = ?", id).Scan(&taxProcess).Error; e != nil {
+		return nil, e
+	}
+	return &taxProcess, nil
+}
+
 func (r RepositoryImpl) UpdateNotifyFailedOfTaxProcess(ctx context.Context, ids []uint) error {
 	if e := r.DB.
 		Model(models.TaxProcess{}).

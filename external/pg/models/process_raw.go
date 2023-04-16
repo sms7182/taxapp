@@ -14,3 +14,10 @@ type FailedTaxProcess struct {
 	Response    pgtype.JSONB `gorm:"type:jsonb;default:'[]'"`
 	InternalTrn string       `gorm:"column:internal_trn"`
 }
+
+type FailedTaxData struct {
+	Id              uint         `gorm:"column:id"`
+	Response        pgtype.JSONB `gorm:"type:jsonb;default:'[]'"`
+	InternalTrn     string       `gorm:"column:internal_trn"`
+	StandardInvoice pgtype.JSONB `gorm:"type:jsonb;default:'[]'"`
+}
