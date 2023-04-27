@@ -28,13 +28,14 @@ func (t *Transfer) fillEssentialHeader(headers map[string]string) {
 	}
 }
 
-func (t *Transfer) signPacket(packet *types.RequestPacket) error {
+func (t *Transfer) signPacket(packet *types.RequestPacket, privateKey string) error {
+	rsaPrv, err := ParseRsaPrivateKeyFromPemStr(privateKey)
 	normalizedForm, err := t.cfg.normalizer(packet.GetDataJSONMap())
 	if err != nil {
 		return err
 	}
 
-	sig, err := t.cfg.signer([]byte(normalizedForm), t.cfg.prvKey)
+	sig, err := t.cfg.signer([]byte(normalizedForm), rsaPrv)
 	if err != nil {
 		return err
 	}

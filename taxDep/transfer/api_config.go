@@ -16,10 +16,10 @@ const (
 type ApiConfig struct {
 	baseURL  string
 	clientID string
-	prvKey   *rsa.PrivateKey
-	pubKey   *rsa.PublicKey
-	public   string
-	private  string
+	//	prvKey   *rsa.PrivateKey
+	//	pubKey   *rsa.PublicKey
+	public  string
+	private string
 
 	normalizer func(map[string]interface{}) (string, error)
 
@@ -30,11 +30,9 @@ type ApiConfig struct {
 	pubKeyEncrypter func([]byte, *rsa.PublicKey) ([]byte, error)
 }
 
-func DefaultAPIConfig(prvKey *rsa.PrivateKey, pubKey *rsa.PublicKey, clientID, baseURL string) *ApiConfig {
+func DefaultAPIConfig(clientID, baseURL string) *ApiConfig {
 	return &ApiConfig{
 		baseURL:         baseURL,
-		prvKey:          prvKey,
-		pubKey:          pubKey,
 		normalizer:      cryptoutils.NormalizeJsonObj,
 		signer:          cryptoutils.SignPKCS1v15,
 		encrypter:       cryptoutils.AesGCMNoPaddingEncrypt,

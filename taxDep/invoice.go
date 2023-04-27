@@ -20,7 +20,7 @@ func (t *Terminal) SendInvoices(taxRawId *uint, taxProcessId *uint, invoices []t
 		packets[i] = *t.buildRequestPacket(invoice, "INVOICE.V01", requestUniqueId)
 	}
 	reqId := uuid.NewString()
-	return t.transferAPI.SendPackets(taxRawId, taxProcessId, reqId, packets, "normal-enqueue", token, true, true)
+	return t.transferAPI.SendPackets(taxRawId, taxProcessId, reqId, packets, "normal-enqueue", token, true, true, privateKey)
 }
 
 func (t *Terminal) InquiryByReferences(taxRawId *uint, taxProcessId *uint, refs []string, privateKey string) ([]types.InquiryResult, error) {
@@ -38,7 +38,7 @@ func (t *Terminal) InquiryByReferences(taxRawId *uint, taxProcessId *uint, refs 
 		Refs: refs,
 	}, version, requestUniqueId)
 
-	resp, err := t.transferAPI.SendPacketInquiry(taxRawId, taxProcessId, requestUniqueId, packet, version, token, false, false)
+	resp, err := t.transferAPI.SendPacketInquiry(taxRawId, taxProcessId, requestUniqueId, packet, version, token, false, false, privateKey)
 	if err != nil {
 		return nil, err
 	}

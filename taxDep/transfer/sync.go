@@ -61,7 +61,7 @@ func (t *Transfer) SendPacket(taxRawId *uint, taxProcessId *uint, requestUniqueI
 	}
 
 	if sign {
-		t.signPacket(packet)
+		t.signPacket(packet, prvKey)
 	}
 
 	if encrypt {
@@ -125,11 +125,14 @@ func (t *Transfer) SendPacket(taxRawId *uint, taxProcessId *uint, requestUniqueI
 	return sr, json.NewDecoder(resp.Body).Decode(sr)
 }
 
-func (t *Transfer) SendPacketInquiry(taxRawId *uint, taxProcessId *uint, requestUniqueId string, packet *types.RequestPacket, version string, token string, encrypt, sign bool) (*types.SyncResponse2, error) {
+func (t *Transfer) SendPacketInquiry(taxRawId *uint, taxProcessId *uint, requestUniqueId string, packet *types.RequestPacket, version string, token string, encrypt, sign bool, privateKey string) (*types.SyncResponse2, error) {
+	rsaPrv, err := ParseRsaPrivateKeyFromPemStr(privateKey)
 	if packet == nil {
 		return nil, nil
 	}
-
+	if rsaPrv == nil {
+		return nil, nil
+	}
 	headers := make(map[string]string)
 	t.fillEssentialHeader(headers)
 	if len(token) > 0 {
@@ -137,7 +140,7 @@ func (t *Transfer) SendPacketInquiry(taxRawId *uint, taxProcessId *uint, request
 	}
 
 	if sign {
-		t.signPacket(packet)
+		t.signPacket(packet, privateKey)
 	}
 
 	if encrypt {
@@ -149,7 +152,7 @@ func (t *Transfer) SendPacketInquiry(taxRawId *uint, taxProcessId *uint, request
 		return nil, err
 	}
 
-	requestSign, err := t.cfg.signer([]byte(normalizedForm), t.cfg.prvKey)
+	requestSign, err := t.cfg.signer([]byte(normalizedForm), rsaPrv)
 	if err != nil {
 		return nil, err
 	}

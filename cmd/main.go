@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	kafka2 "tax-management/external/kafka"
-	"tax-management/external/notification"
 	"tax-management/external/pg"
 	redis2 "tax-management/external/redis"
 	"tax-management/pkg"
@@ -34,8 +33,6 @@ import (
 func main() {
 
 	setUpViper()
-	araJahanUsername := viper.GetString("araJahanUsername")
-	delijanUsername := viper.GetString("delijanUsername")
 
 	db := getGormDb()
 	runDbMigrations()
@@ -51,23 +48,16 @@ func main() {
 
 	taxClient, err := terminal.New(
 		types.TerminalOptions{
-			TripPrivatePemPath: "./sign_delijan.key",
-			ClientID:           delijanUsername,
-			TerminalBaseURl:    viper.GetString("taxOrg.url"),
+
+			TerminalBaseURl: viper.GetString("taxOrg.url"),
 		},
 		httpClientExte,
 	)
 	if err != nil {
 		panic("inject terminal has error")
 	}
-	service := pkg.Service{Repository: repository, TaxClient: taxClient, UsernameToCompanyName: map[string]string{
-		delijanUsername:  "delijan",
-		araJahanUsername: "arajahan",
-	}, NotificationClient: notification.NotificationClientImpl{
-		From:      viper.GetString("notify.from"),
-		NotifyUrl: viper.GetString("notify.url"),
-		To:        viper.GetString("notify.to"),
-	}}
+	service := pkg.Service{Repository: repository, TaxClient: taxClient}
+	service.UsernameToCompanyName = make(map[string]string)
 	//go syncConsumer.StartConsuming(viper.GetStringSlice("kafka.consumerTopics"), service.ProcessKafkaMessage)
 	controller := pkg.Controller{
 		Service: service,

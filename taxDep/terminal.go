@@ -26,19 +26,14 @@ type Terminal struct {
 }
 
 func New(opt types.TerminalOptions, httpClientExtension pkg.ClientLoggerExtension) (*Terminal, error) {
-	prv, pub, err := getPrivateKey(opt.TripPrivatePemPath)
-	if err != nil {
-		return nil, err
-	}
-
-	tr, err := transfer.NewApiTransfer(transfer.DefaultAPIConfig(prv, pub, opt.ClientID, opt.TerminalBaseURl), httpClientExtension)
+	tr, err := transfer.NewApiTransfer(transfer.DefaultAPIConfig(opt.ClientID, opt.TerminalBaseURl), httpClientExtension)
 	if err != nil {
 		return nil, err
 	}
 
 	return &Terminal{
-		PrivateKey:  prv,
-		PublicKey:   pub,
+		// PrivateKey:  prv,
+		// PublicKey:   pub,
 		clientID:    opt.ClientID,
 		transferAPI: tr,
 	}, nil

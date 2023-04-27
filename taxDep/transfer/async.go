@@ -22,11 +22,12 @@ func (t *Transfer) SendPackets(
 	version string,
 	token string,
 	encrypt,
-	sign bool) (*types.AsyncResponse, error) {
+	sign bool,
+	privateKey string) (*types.AsyncResponse, error) {
 	if len(packets) == 0 {
 		return nil, nil
 	}
-
+	rsaPrv, err := ParseRsaPrivateKeyFromPemStr(privateKey)
 	headers := make(map[string]string)
 	t.fillEssentialHeader(headers)
 	if len(token) > 0 {
@@ -39,7 +40,7 @@ func (t *Transfer) SendPackets(
 
 	if sign {
 		for i := range packets {
-			t.signPacket(&packets[i])
+			t.signPacket(&packets[i], privateKey)
 		}
 	}
 
@@ -59,7 +60,7 @@ func (t *Transfer) SendPackets(
 		return nil, err
 	}
 
-	requestSign, err := t.cfg.signer([]byte(normalizedFrom), t.cfg.prvKey)
+	requestSign, err := t.cfg.signer([]byte(normalizedFrom), rsaPrv)
 	if err != nil {
 		return nil, err
 	}
