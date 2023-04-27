@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"tax-management/external"
-	"tax-management/external/kafka"
 	"tax-management/external/pg/models"
 	"tax-management/notify"
 	"tax-management/taxDep/types"
@@ -17,8 +16,8 @@ type Service struct {
 	Repository            Repository
 	UsernameToCompanyName map[string]string
 	NotificationClient    notify.NotificationClient
-	KafkaProducer         *kafka.Producer
-	TaxClient             TaxClient
+
+	TaxClient TaxClient
 }
 
 const layout = "2006-01-02T15:04:05"
@@ -153,14 +152,6 @@ func (service Service) NotifyFailedTax() {
 
 }
 
-func (s Service) RetryInvoice(ctx context.Context, id uint) error {
-	taxRaw, err := s.Repository.GetByTaxRawId(ctx, id)
-	if err != nil {
-		return err
-	}
-	return s.KafkaProducer.Produce(taxRaw.TaxType, taxRaw.TaxData.Bytes)
-}
-
 func (s Service) AutoRetry(ctx context.Context) {
 	taxRaws, err := s.Repository.GetReadyTaxToRetry(ctx)
 	if err != nil {
@@ -168,7 +159,7 @@ func (s Service) AutoRetry(ctx context.Context) {
 	}
 
 	for i := 0; i < len(taxRaws); i++ {
-		s.KafkaProducer.Produce(taxRaws[i].TaxType, taxRaws[i].TaxData.Bytes)
+
 	}
 
 }

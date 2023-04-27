@@ -49,35 +49,6 @@ func main() {
 
 	httpClientExte := terminal.ClientLoggerExtensionImpl{repository}
 
-	arajahanTerminal, err := terminal.New(
-		types.TerminalOptions{
-			TripPrivatePemPath: "./sign_ara.key",
-			ClientID:           araJahanUsername,
-			TerminalBaseURl:    viper.GetString("taxOrg.url"),
-		},
-		httpClientExte,
-	)
-
-	if err != nil {
-		panic(fmt.Sprintf("failed to create client for %s, err: %+v", araJahanUsername, err))
-	}
-
-	delijanTerminal, err := terminal.New(
-		types.TerminalOptions{
-			TripPrivatePemPath: "./sign_delijan.key",
-			ClientID:           delijanUsername,
-			TerminalBaseURl:    viper.GetString("taxOrg.url"),
-		},
-		httpClientExte,
-	)
-	if err != nil {
-		panic(fmt.Sprintf("failed to create client for %s, err: %+v", delijanUsername, err))
-	}
-
-	taxClientMap := make(map[string]pkg.TaxClient)
-	taxClientMap[araJahanUsername] = arajahanTerminal
-	taxClientMap[delijanUsername] = delijanTerminal
-	producer := NewProducer()
 	taxClient, err := terminal.New(
 		types.TerminalOptions{
 			TripPrivatePemPath: "./sign_delijan.key",
@@ -86,6 +57,9 @@ func main() {
 		},
 		httpClientExte,
 	)
+	if err != nil {
+		panic("inject terminal has error")
+	}
 	service := pkg.Service{Repository: repository, TaxClient: taxClient, UsernameToCompanyName: map[string]string{
 		delijanUsername:  "delijan",
 		araJahanUsername: "arajahan",
@@ -93,7 +67,7 @@ func main() {
 		From:      viper.GetString("notify.from"),
 		NotifyUrl: viper.GetString("notify.url"),
 		To:        viper.GetString("notify.to"),
-	}, KafkaProducer: producer}
+	}}
 	go syncConsumer.StartConsuming(viper.GetStringSlice("kafka.consumerTopics"), service.ProcessKafkaMessage)
 	controller := pkg.Controller{
 		Service: service,
