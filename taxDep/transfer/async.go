@@ -4,12 +4,8 @@ import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
-	"net/url"
-	"path"
-	"path/filepath"
 
 	"tax-management/taxDep/types"
 )
@@ -80,16 +76,9 @@ func (t *Transfer) SendPackets(
 		return nil, err
 	}
 
-	u, err := url.Parse(t.cfg.baseURL)
-	if err != nil {
-		return nil, err
-	}
+	url := t.cfg.baseURL + "async/" + version
 
-	u.Path = path.Join(u.Path, filepath.Join("async", version))
-
-	fmt.Println(u.String())
-
-	httpReq, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewReader(requestBody))
+	httpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBody))
 	if err != nil {
 		return nil, err
 	}

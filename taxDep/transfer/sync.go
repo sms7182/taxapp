@@ -92,14 +92,9 @@ func (t *Transfer) SendPacket(taxRawId *uint, taxProcessId *uint, requestUniqueI
 		return nil, err
 	}
 
-	u, err := url.Parse(t.cfg.baseURL)
-	if err != nil {
-		return nil, err
-	}
+	url := t.cfg.baseURL + "sync/" + version
 
-	u.Path = path.Join(u.Path, filepath.Join("sync", version))
-
-	httpReq, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewReader(reqJsonBody))
+	httpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(reqJsonBody))
 	if err != nil {
 		return nil, err
 	}
