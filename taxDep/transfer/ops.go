@@ -10,13 +10,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
-	"path"
-	"path/filepath"
 	"time"
 
-	"github.com/google/uuid"
 	"tax-management/taxDep/types"
+
+	"github.com/google/uuid"
 )
 
 func (t *Transfer) fillEssentialHeader(headers map[string]string) {
@@ -119,14 +117,14 @@ func (t *Transfer) GetServerPublicKey() (*rsa.PublicKey, string, error) {
 		return nil, "", err
 	}
 
-	u, err := url.Parse(t.cfg.baseURL)
-	if err != nil {
-		return nil, "", err
-	}
+	// u, err := url.Parse(t.cfg.baseURL)
+	// if err != nil {
+	// 	return nil, "", err
+	// }
+	url := t.cfg.baseURL + "sync/GET_SERVER_INFORMATION"
+	// u.Path = path.Join(u.Path, filepath.Join("sync", "GET_SERVER_INFORMATION"))
 
-	u.Path = path.Join(u.Path, filepath.Join("sync", "GET_SERVER_INFORMATION"))
-
-	httpReq, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewReader(reqBody))
+	httpReq, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(reqBody))
 	if err != nil {
 		return nil, "", err
 	}

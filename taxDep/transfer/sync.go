@@ -2,8 +2,12 @@ package transfer
 
 import (
 	"bytes"
+	"crypto/rsa"
+	"crypto/x509"
 	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
+	"errors"
 	"net/http"
 	"net/url"
 	"path"
@@ -12,7 +16,40 @@ import (
 	"tax-management/taxDep/types"
 )
 
-func (t *Transfer) SendPacket(taxRawId *uint, taxProcessId *uint, requestUniqueId string, packet *types.RequestPacket, version string, token string, encrypt, sign bool) (*types.SyncResponse, error) {
+func ParseRsaPrivateKeyFromPemStr(privPEM string) (*rsa.PrivateKey, error) {
+	block, _ := pem.Decode([]byte(privPEM))
+	if block == nil {
+		return nil, errors.New("failed to parse PEM block containing the key")
+	}
+
+	priv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	return priv, nil
+}
+
+func ParseRsaPublicKeyFromPemStr(pubPEM string) (*rsa.PublicKey, error) {
+	block, _ := pem.Decode([]byte(pubPEM))
+	if block == nil {
+		return nil, errors.New("failed to parse PEM block containing the key")
+	}
+
+	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+	if err != nil {
+		return nil, err
+	}
+
+	switch pub := pub.(type) {
+	case *rsa.PublicKey:
+		return pub, nil
+	default:
+		break // fall through
+	}
+	return nil, errors.New("Key type is not RSA")
+}
+func (t *Transfer) SendPacket(taxRawId *uint, taxProcessId *uint, requestUniqueId string, packet *types.RequestPacket, version string, token string, encrypt, sign bool, prvKey string) (*types.SyncResponse, error) {
 	if packet == nil {
 		return nil, nil
 	}
@@ -35,8 +72,11 @@ func (t *Transfer) SendPacket(taxRawId *uint, taxProcessId *uint, requestUniqueI
 	if err != nil {
 		return nil, err
 	}
-
-	requestSign, err := t.cfg.signer([]byte(normalizedForm), t.cfg.prvKey)
+	privateKey, err := ParseRsaPrivateKeyFromPemStr(prvKey)
+	if err != nil {
+		return nil, err
+	}
+	requestSign, err := t.cfg.signer([]byte(normalizedForm), privateKey)
 	if err != nil {
 		return nil, err
 	}

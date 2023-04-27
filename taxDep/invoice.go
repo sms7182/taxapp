@@ -6,8 +6,8 @@ import (
 	"github.com/google/uuid"
 )
 
-func (t *Terminal) SendInvoices(taxRawId *uint, taxProcessId *uint, invoices []types.StandardInvoice) (*types.AsyncResponse, error) {
-	token, err := t.GetToken(taxRawId, taxProcessId, uuid.NewString())
+func (t *Terminal) SendInvoices(taxRawId *uint, taxProcessId *uint, invoices []types.StandardInvoice, privateKey string) (*types.AsyncResponse, error) {
+	token, err := t.GetToken(taxRawId, taxProcessId, uuid.NewString(), privateKey)
 	if err != nil {
 		return nil, err
 	}
@@ -23,8 +23,8 @@ func (t *Terminal) SendInvoices(taxRawId *uint, taxProcessId *uint, invoices []t
 	return t.transferAPI.SendPackets(taxRawId, taxProcessId, reqId, packets, "normal-enqueue", token, true, true)
 }
 
-func (t *Terminal) InquiryByReferences(taxRawId *uint, taxProcessId *uint, refs []string) ([]types.InquiryResult, error) {
-	token, err := t.GetToken(taxRawId, taxProcessId, uuid.NewString())
+func (t *Terminal) InquiryByReferences(taxRawId *uint, taxProcessId *uint, refs []string, privateKey string) ([]types.InquiryResult, error) {
+	token, err := t.GetToken(taxRawId, taxProcessId, uuid.NewString(), privateKey)
 	if err != nil {
 		return nil, err
 	}

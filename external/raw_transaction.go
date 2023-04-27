@@ -54,6 +54,8 @@ type RawTransaction struct {
 	Source      SourceData  `json:"source"`
 	Transaction interface{} `json:"transaction"`
 	TsMs        int64       `json:"ts_ms"`
+	PubKey      string      `json:"pubKey"`
+	PrivateKey  string      `json:"privateKey"`
 }
 
 func (r RawTransaction) ToStandardInvoice(taxId string) []types.StandardInvoice {

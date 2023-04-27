@@ -18,6 +18,8 @@ type ApiConfig struct {
 	clientID string
 	prvKey   *rsa.PrivateKey
 	pubKey   *rsa.PublicKey
+	public   string
+	private  string
 
 	normalizer func(map[string]interface{}) (string, error)
 

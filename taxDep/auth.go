@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-func (t *Terminal) GetToken(taxRawId *uint, taxProcessId *uint, requestUniqueId string) (string, error) {
+func (t *Terminal) GetToken(taxRawId *uint, taxProcessId *uint, requestUniqueId string, privateKey string) (string, error) {
 	t.mtx.Lock()
 	defer t.mtx.Unlock()
 
@@ -18,7 +18,7 @@ func (t *Terminal) GetToken(taxRawId *uint, taxProcessId *uint, requestUniqueId 
 		Username: t.clientID,
 	}, "GET_TOKEN", requestUniqueId)
 
-	resp, err := t.transferAPI.SendPacket(taxRawId, taxProcessId, requestUniqueId, packet, "GET_TOKEN", "", false, false)
+	resp, err := t.transferAPI.SendPacket(taxRawId, taxProcessId, requestUniqueId, packet, "GET_TOKEN", "", false, false, privateKey)
 	if err != nil {
 		return "", err
 	}

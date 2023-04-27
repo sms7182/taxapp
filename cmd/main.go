@@ -44,8 +44,8 @@ func main() {
 	//rdb := getActualRedisClient()
 	//redisClient := getRedisClient(rdb)
 
-	kafkaConn := NewConsumer()
-	syncConsumer := kafka2.SyncConsumer{Conn: kafkaConn}
+	//	kafkaConn := NewConsumer()
+	//	syncConsumer := kafka2.SyncConsumer{Conn: kafkaConn}
 
 	httpClientExte := terminal.ClientLoggerExtensionImpl{repository}
 
@@ -68,7 +68,7 @@ func main() {
 		NotifyUrl: viper.GetString("notify.url"),
 		To:        viper.GetString("notify.to"),
 	}}
-	go syncConsumer.StartConsuming(viper.GetStringSlice("kafka.consumerTopics"), service.ProcessKafkaMessage)
+	//go syncConsumer.StartConsuming(viper.GetStringSlice("kafka.consumerTopics"), service.ProcessKafkaMessage)
 	controller := pkg.Controller{
 		Service: service,
 	}
