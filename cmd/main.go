@@ -57,6 +57,7 @@ func main() {
 		},
 		httpClientExte,
 	)
+
 	if err != nil {
 		panic(fmt.Sprintf("failed to create client for %s, err: %+v", araJahanUsername, err))
 	}
@@ -77,7 +78,15 @@ func main() {
 	taxClientMap[araJahanUsername] = arajahanTerminal
 	taxClientMap[delijanUsername] = delijanTerminal
 	producer := NewProducer()
-	service := pkg.Service{Repository: repository, TaxClient: taxClientMap, UsernameToCompanyName: map[string]string{
+	taxClient, err := terminal.New(
+		types.TerminalOptions{
+			TripPrivatePemPath: "./sign_delijan.key",
+			ClientID:           delijanUsername,
+			TerminalBaseURl:    viper.GetString("taxOrg.url"),
+		},
+		httpClientExte,
+	)
+	service := pkg.Service{Repository: repository, TaxClient: taxClient, UsernameToCompanyName: map[string]string{
 		delijanUsername:  "delijan",
 		araJahanUsername: "arajahan",
 	}, NotificationClient: notification.NotificationClientImpl{
