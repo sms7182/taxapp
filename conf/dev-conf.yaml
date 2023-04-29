@@ -1,30 +1,17 @@
-serverPort: ":9000"
-postgresSource: "host=192.168.88.101 user=pgsql dbname=tax_management sslmode=disable password=Astronomiex1235"
-pgMigrationSource: "postgres://pgsql:Astronomiex1235@192.168.88.101:5432/tax_management?sslmode=disable"
-kafka:
-  urls: "192.168.88.143:9092,192.168.88.144:9092,192.168.88.145:9092"
-  consumerTopics:
-    - "dummy-topic"
-    #      - "outbox_.public.tax_dom_flight_market_place"
-    # - "outbox_.public.tax_bus_other_provider"
-    # - "outbox_.public.tax_dom_flight_free_cancellation"
-    # - "outbox_.public.tax_dom_flight_markup"
-    # - "outbox_.public.tax_dom_hotel_mp"
-    # - "outbox_.public.tax_dom_hotel_retail"
-  facility: "beta-tax-management"
+serverPort: ":1401"
+postgresSource: "host=localhost user=postgres dbname=tax_management sslmode=disable password=postgres"
+pgMigrationSource: "postgres://postgres:postgres@localhost:5432/tax_management?sslmode=disable"
+# kafka:
+#   urls: "192.168.88.143:9092,192.168.88.144:9092,192.168.88.145:9092"
+#   consumerTopics:
+#     - "dummy-topic"
+#     #      - "outbox_.public.tax_dom_flight_market_place"
+#     # - "outbox_.public.tax_bus_other_provider"
+#     # - "outbox_.public.tax_dom_flight_free_cancellation"
+#     # - "outbox_.public.tax_dom_flight_markup"
+#     # - "outbox_.public.tax_dom_hotel_mp"
+#     # - "outbox_.public.tax_dom_hotel_retail"
+#   facility: "beta-tax-management"
 
 taxOrg:
   url: "https://tp.tax.gov.ir/req/api/self-tsp/"
-
-araJahanUsername: "A11T1F"
-delijanUsername: "A11T12"
-
-notify:
-  from: "mojtaba.safavi@snapptrip.com"
-  url: "http://localhost:9001/notify"
-  to: "sms7182@gmail.com,atefe.re@gmail.com,mahdipaymard23@gmail.com,hamidebrahimi1998@gmail.com,marzieheskandari19@gmail.com,iman.ravakhah@snapptrip.com,maryam.vatani@snapptrip.com"
-
-redis:
-  url: "192.168.88.108:6379"
-  db: 10
-  password: ""

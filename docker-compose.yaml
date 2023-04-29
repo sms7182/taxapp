@@ -1,0 +1,22 @@
+version: '3.4'
+
+networks:
+  tax:
+    driver: bridge
+
+services:
+   
+  taxapp:
+    image: taxapp
+    container_name: taxapp
+    networks:
+      - tax
+    
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 1401:1401
+    
+
+    

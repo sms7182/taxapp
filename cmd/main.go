@@ -6,14 +6,13 @@ import (
 	"encoding/pem"
 	"fmt"
 	"os"
-	kafka2 "tax-management/external/kafka"
+
 	"tax-management/external/pg"
 	redis2 "tax-management/external/redis"
 	"tax-management/pkg"
 	terminal "tax-management/taxDep"
 	"tax-management/taxDep/types"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/gin-gonic/gin"
 	"github.com/go-redis/redis/v8"
 
@@ -67,24 +66,24 @@ func main() {
 	router.Run(viper.GetString("serverPort"))
 }
 
-func NewConsumer() *kafka.Consumer {
-	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": viper.GetString("kafka.urls"),
-		"group.id":          "tax-management5",
-		"auto.offset.reset": "smallest"})
-	if err != nil {
-		panic("failed to create consumer")
-	}
-	return consumer
-}
+// func NewConsumer() *kafka.Consumer {
+// 	consumer, err := kafka.NewConsumer(&kafka.ConfigMap{
+// 		"bootstrap.servers": viper.GetString("kafka.urls"),
+// 		"group.id":          "tax-management5",
+// 		"auto.offset.reset": "smallest"})
+// 	if err != nil {
+// 		panic("failed to create consumer")
+// 	}
+// 	return consumer
+// }
 
-func NewProducer() *kafka2.Producer {
-	pr, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": viper.GetString("kafka.urls")})
-	if err != nil {
-		panic("failed to create consumer")
-	}
-	return &kafka2.Producer{pr}
-}
+// func NewProducer() *kafka2.Producer {
+// 	pr, err := kafka.NewProducer(&kafka.ConfigMap{"bootstrap.servers": viper.GetString("kafka.urls")})
+// 	if err != nil {
+// 		panic("failed to create consumer")
+// 	}
+// 	return &kafka2.Producer{pr}
+// }
 
 func getPrivateKey(pvPath string) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	prvPemBytes, err := os.ReadFile(pvPath)

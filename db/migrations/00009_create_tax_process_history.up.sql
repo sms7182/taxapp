@@ -20,6 +20,6 @@ create table tax_process_history
 );
 
 alter table tax_process
-    owner to pgsql;
+    owner to postgres;
 
 

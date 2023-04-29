@@ -1,11 +1,19 @@
-FROM registry.pinsvc.net/mirror/alpine
+FROM golang:alpine
+COPY ./ /usr/src/app/taxapp
 
-RUN apk add --no-cache libc6-compat && apk add tzdata && apk add curl && apk add gcompat
-ENV TZ Asia/Tehran
-COPY app /opt
-COPY db/migrations/*.sql /opt/db/migrations/
-COPY sign_ara.key /opt
-COPY sign_delijan.key /opt
-COPY templates /opt/templates
-WORKDIR /opt
-CMD ["./app"]
+WORKDIR /usr/src/app/taxapp/cmd
+
+COPY ./conf/dev-conf.yaml ./conf
+COPY ./taxDep  ./taxDep
+COPY ./pkg ./pkg
+COPY ./db/migrations/*.sql ./db/migrations/
+COPY ./go.mod ./
+COPY ./go.sum ./
+COPY ./notify ./notify
+COPY ./external/ ./external
+RUN go mod download
+
+COPY ./cmd/*.go  ./
+RUN go build -o /taxapp
+EXPOSE 1401
+CMD ["/taxapp"]
