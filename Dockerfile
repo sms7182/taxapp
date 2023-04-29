@@ -3,7 +3,7 @@ COPY ./ /usr/src/app/taxapp
 
 WORKDIR /usr/src/app/taxapp/cmd
 
-COPY ./conf/dev-conf.yaml ./conf
+COPY ./conf/dev-conf.yaml ./conf/
 COPY ./taxDep  ./taxDep
 COPY ./pkg ./pkg
 COPY ./db/migrations/*.sql ./db/migrations/
