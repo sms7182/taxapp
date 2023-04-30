@@ -7,10 +7,13 @@ import (
 )
 
 type Customer struct {
-	Id        uint      `gorm:"autoIncrement,primaryKey"`
-	CreatedAt time.Time `gorm:"column:created_at"`
-	UserName  string    `gorm:"column:user_name"`
-	Token     string    `gorm:"column:token"`
+	Id         uint      `gorm:"autoIncrement,primaryKey"`
+	CreatedAt  time.Time `gorm:"column:created_at"`
+	FinanceId  string    `gorm:"column:finance_id"`
+	Token      string    `gorm:"column:token"`
+	PublicKey  string    `gorm:"column:"public_key"`
+	PrivateKey string    `gorm:"column:"private_key"`
+	ExpireTime time.Time `gorm:"column:"expire_time"`
 }
 
 func (obj *Customer) BeforeCreate(_ *gorm.DB) error {

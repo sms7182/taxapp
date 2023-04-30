@@ -35,8 +35,8 @@ func (service Service) StartSendingInvoice(data external.RawTransaction) error {
 			//log in db for notValidCustomer
 			return nil
 		}
-		service.UsernameToCompanyName[data.After.Username] = validCustomer.UserName
-		usrName = validCustomer.UserName
+		service.UsernameToCompanyName[data.After.Username] = validCustomer.FinanceId
+		usrName = validCustomer.FinanceId
 		fmt.Printf("usrname for sending invoice %s", usrName)
 	}
 
