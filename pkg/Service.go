@@ -49,7 +49,7 @@ func (service Service) StartSendingInvoice(data external.RawTransaction) error {
 	if len(invoice) == 1 {
 		service.Repository.UpdateTaxProcessStandardInvoice(ctx, taxProcessId, invoice[0])
 	}
-	res, err := service.TaxClient.SendInvoices(&rawDataId, &taxProcessId, invoice, data.PrivateKey)
+	res, err := service.TaxClient.SendInvoices(&rawDataId, &taxProcessId, invoice, data.PrivateKey, usrName)
 	if err != nil {
 		service.Repository.UpdateTaxProcessStatus(ctx, taxProcessId, models.TaxStatusFailed.String(), nil)
 		return nil

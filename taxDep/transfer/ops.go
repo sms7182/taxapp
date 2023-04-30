@@ -100,8 +100,7 @@ func (t *Transfer) mergePacketAndHeaders(packet *types.RequestPacket, headers ma
 
 	return result
 }
-
-func (t *Transfer) GetServerPublicKey() (*rsa.PublicKey, string, error) {
+func (t *Transfer) GetServerPublicKeyWithCustomerId(customerId string) (*rsa.PublicKey, string, error) {
 	headers := make(map[string]string)
 	t.fillEssentialHeader(headers)
 
@@ -109,7 +108,7 @@ func (t *Transfer) GetServerPublicKey() (*rsa.PublicKey, string, error) {
 		Packet: &types.RequestPacket{
 			UID:        uuid.NewString(),
 			PacketType: "GET_SERVER_INFORMATION",
-			FiscalId:   t.cfg.clientID,
+			FiscalId:   customerId,
 		},
 	}
 
@@ -166,6 +165,9 @@ func (t *Transfer) parsePubKey(keyBase64 string) (*rsa.PublicKey, error) {
 	}
 
 	return key.(*rsa.PublicKey), nil
+}
+func (t *Transfer) GetServerPublicKey() (*rsa.PublicKey, string, error) {
+	return t.GetServerPublicKeyWithCustomerId(t.cfg.clientID)
 }
 
 type serverInfoResponse struct {

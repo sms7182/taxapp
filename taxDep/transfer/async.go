@@ -19,7 +19,7 @@ func (t *Transfer) SendPackets(
 	token string,
 	encrypt,
 	sign bool,
-	privateKey string) (*types.AsyncResponse, error) {
+	privateKey string, customerId string) (*types.AsyncResponse, error) {
 	if len(packets) == 0 {
 		return nil, nil
 	}
@@ -29,9 +29,12 @@ func (t *Transfer) SendPackets(
 	if len(token) > 0 {
 		headers["Authorization"] = token
 	}
-
+	serverPubKey, id, err := t.GetServerPublicKeyWithCustomerId(customerId)
+	if err != nil && serverPubKey == nil {
+		return nil, nil
+	}
 	for i := range packets {
-		packets[i].EncryptionKeyId = t.pubKeyID
+		packets[i].EncryptionKeyId = id
 	}
 
 	if sign {

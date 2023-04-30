@@ -6,9 +6,9 @@ import (
 )
 
 type Transfer struct {
-	cfg              *ApiConfig
-	serverPubKey     *rsa.PublicKey
-	pubKeyID         string
+	cfg          *ApiConfig
+	serverPubKey *rsa.PublicKey
+	//pubKeyID         string
 	HttpClientLogger pkg.ClientLoggerExtension
 }
 
@@ -18,16 +18,16 @@ func NewApiTransfer(cfg *ApiConfig, httpClientLogger pkg.ClientLoggerExtension) 
 		HttpClientLogger: httpClientLogger,
 	}
 
-	return transfer, transfer.setServerInfos()
+	return transfer, nil
 }
 
 func (t *Transfer) setServerInfos() error {
-	pubkey, id, err := t.GetServerPublicKey()
-	if err != nil {
-		return err
-	}
+	// pubkey, id, err := t.GetServerPublicKey()
+	// if err != nil {
+	// 	return err
+	// }
 
-	t.pubKeyID = id
-	t.serverPubKey = pubkey
+	// //t.pubKeyID = id
+	// t.serverPubKey = pubkey
 	return nil
 }
