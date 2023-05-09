@@ -22,4 +22,5 @@ type Repository interface {
 	GetReadyTaxToRetry(ctx context.Context) ([]models.TaxRawDomain, error)
 	GetTaxProcess(ctx context.Context, id uint) (*models.TaxProcess, error)
 	GetUserName(ctx context.Context, usrname string) (*models.Customer, error)
+	CreateCustomer(ctx context.Context, customer models.Customer) (*uint, error)
 }

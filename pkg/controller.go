@@ -3,6 +3,7 @@ package pkg
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strconv"
@@ -21,9 +22,30 @@ func (cr Controller) SetRoutes(e *gin.Engine) {
 
 	e.GET("/autoRetryInvoice", cr.autoRetry)
 	e.GET("/taxprocess/:id", cr.getTaxProcess)
+	e.POST("/init_customer", cr.initCustomer)
 	e.POST("/sendInvoice", cr.sendInvoice)
 }
 
+func (cr Controller) initCustomer(c *gin.Context) {
+	var cdto external.CustomerDto
+	request := c.Request
+	reqBody, _ := ioutil.ReadAll(request.Body)
+	defer request.Body.Close()
+	_ = json.Unmarshal(reqBody, &cdto)
+
+	if cdto.PrivateKey == "" || cdto.PublicKey == "" || cdto.UserName == "" {
+		c.JSON(http.StatusBadRequest, fmt.Errorf("privateKey or public or userName is nil"))
+		return
+	}
+	customerId, err := cr.Service.InitialCustomer(&cdto)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+
+	c.JSON(http.StatusOK, customerId)
+
+}
 func (cr Controller) sendInvoice(c *gin.Context) {
 	var rawTransaction external.RawTransaction
 	request := c.Request

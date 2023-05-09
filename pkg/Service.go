@@ -20,6 +20,20 @@ type Service struct {
 
 const layout = "2006-01-02T15:04:05"
 
+func (service Service) InitialCustomer(dto *external.CustomerDto) (*uint, error) {
+	ctx := context.Background()
+	id, err := service.Repository.CreateCustomer(ctx, models.Customer{
+		FinanceId:  dto.UserName,
+		Token:      dto.Token,
+		PublicKey:  dto.PublicKey,
+		PrivateKey: dto.PrivateKey,
+		ExpireTime: time.Now().AddDate(1, 0, 0),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return id, nil
+}
 func (service Service) StartSendingInvoice(data external.RawTransaction) error {
 	ctx := context.Background()
 	farvardin1, _ := time.Parse(layout, "2023-03-20T23:59:59")

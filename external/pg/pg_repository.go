@@ -224,3 +224,11 @@ func (rep RepositoryImpl) GetUserName(ctx context.Context, token string) (*model
 	}
 	return &customer, nil
 }
+
+func (rep RepositoryImpl) CreateCustomer(ctx context.Context, customer models.Customer) (*uint, error) {
+	err := rep.DB.WithContext(ctx).Create(&customer).Error
+	if err == nil {
+		return &customer.Id, nil
+	}
+	return nil, err
+}

@@ -48,6 +48,12 @@ type SourceData struct {
 	Xmin      interface{} `json:"xmin"`
 }
 
+type CustomerDto struct {
+	Token      string `json:"token"`
+	PublicKey  string `json:"publicKey"`
+	PrivateKey string `json:"privateKey"`
+	UserName   string `json:"userName"`
+}
 type RawTransaction struct {
 	After       AfterData   `json:"after"`
 	Op          string      `json:"op"`
