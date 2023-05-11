@@ -8,7 +8,8 @@ services:
     image: taxapp
     container_name: taxapp
     
-    network_mode: host
+    extra_hosts: 
+      - "host.docker.internal:host-gateway"
   
     build:
       context: .
