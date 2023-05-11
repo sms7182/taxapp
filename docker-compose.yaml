@@ -8,8 +8,8 @@ services:
     image: taxapp
     container_name: taxapp
     
-    extra_hosts:
-      - "host.docker.internal:172.17.0.1"
+    network_mode: host
+  
     build:
       context: .
       dockerfile: ./Dockerfile
