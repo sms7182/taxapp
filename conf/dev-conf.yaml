@@ -1,6 +1,6 @@
 serverPort: ":1401"
-postgresSource: "host=host.docker.internal user=postgres dbname=postgres sslmode=disable password=postgres"
-pgMigrationSource: "postgres://postgres:postgres@host.docker.internal:5432/postgres?sslmode=disable"
+postgresSource: "host=localhost user=postgres dbname=tax_management sslmode=disable password=postgres"
+pgMigrationSource: "postgres://postgres:postgres@localhost:5432/tax_management?sslmode=disable"
 # kafka:
 #   urls: "192.168.88.143:9092,192.168.88.144:9092,192.168.88.145:9092"
 #   consumerTopics:
