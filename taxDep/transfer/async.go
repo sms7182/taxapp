@@ -45,7 +45,7 @@ func (t *Transfer) SendPackets(
 
 	if encrypt {
 		for i := range packets {
-			t.encryptPacket(&packets[i])
+			t.encryptPacket(&packets[i], serverPubKey)
 		}
 	}
 

@@ -22,12 +22,14 @@ func ParseRsaPrivateKeyFromPemStr(privPEM string) (*rsa.PrivateKey, error) {
 		return nil, errors.New("failed to parse PEM block containing the key")
 	}
 
-	priv, err := x509.ParsePKCS1PrivateKey(block.Bytes)
+	priv, err := x509.ParsePKCS8PrivateKey(block.Bytes)
 	if err != nil {
 		return nil, err
 	}
-
-	return priv, nil
+	if priv != nil {
+		return priv.(*rsa.PrivateKey), nil
+	}
+	return nil, nil
 }
 
 func ParseRsaPublicKeyFromPemStr(pubPEM string) (*rsa.PublicKey, error) {
@@ -49,11 +51,16 @@ func ParseRsaPublicKeyFromPemStr(pubPEM string) (*rsa.PublicKey, error) {
 	}
 	return nil, errors.New("Key type is not RSA")
 }
-func (t *Transfer) SendPacket(taxRawId *uint, taxProcessId *uint, requestUniqueId string, packet *types.RequestPacket, version string, token string, encrypt, sign bool, prvKey string) (*types.SyncResponse, error) {
+func (t *Transfer) SendPacket(taxRawId *uint, taxProcessId *uint, requestUniqueId string, packet *types.RequestPacket, version string, token string, encrypt, sign bool, prvKey string, customerId string) (*types.SyncResponse, error) {
 	if packet == nil {
 		return nil, nil
 	}
-
+	serverPubKey, id, err := t.GetServerPublicKeyWithCustomerId(customerId)
+	if err != nil && serverPubKey == nil {
+		return nil, nil
+	}
+	packet.EncryptionKeyId = id
+	print(id)
 	headers := make(map[string]string)
 	t.fillEssentialHeader(headers)
 	if len(token) > 0 {
@@ -65,7 +72,7 @@ func (t *Transfer) SendPacket(taxRawId *uint, taxProcessId *uint, requestUniqueI
 	}
 
 	if encrypt {
-		t.encryptPacket(packet)
+		t.encryptPacket(packet, serverPubKey)
 	}
 
 	normalizedForm, err := t.cfg.normalizer(t.mergePacketAndHeaders(packet, headers))
@@ -120,7 +127,7 @@ func (t *Transfer) SendPacket(taxRawId *uint, taxProcessId *uint, requestUniqueI
 	return sr, json.NewDecoder(resp.Body).Decode(sr)
 }
 
-func (t *Transfer) SendPacketInquiry(taxRawId *uint, taxProcessId *uint, requestUniqueId string, packet *types.RequestPacket, version string, token string, encrypt, sign bool, privateKey string) (*types.SyncResponse2, error) {
+func (t *Transfer) SendPacketInquiry(taxRawId *uint, taxProcessId *uint, requestUniqueId string, packet *types.RequestPacket, version string, token string, encrypt, sign bool, privateKey string, customerId string) (*types.SyncResponse2, error) {
 	rsaPrv, err := ParseRsaPrivateKeyFromPemStr(privateKey)
 	if packet == nil {
 		return nil, nil
@@ -128,6 +135,11 @@ func (t *Transfer) SendPacketInquiry(taxRawId *uint, taxProcessId *uint, request
 	if rsaPrv == nil {
 		return nil, nil
 	}
+	serverPubKey, id, err := t.GetServerPublicKeyWithCustomerId(customerId)
+	if err != nil && serverPubKey == nil {
+		return nil, nil
+	}
+	packet.EncryptionKeyId = id
 	headers := make(map[string]string)
 	t.fillEssentialHeader(headers)
 	if len(token) > 0 {
@@ -139,7 +151,7 @@ func (t *Transfer) SendPacketInquiry(taxRawId *uint, taxProcessId *uint, request
 	}
 
 	if encrypt {
-		t.encryptPacket(packet)
+		t.encryptPacket(packet, serverPubKey)
 	}
 
 	normalizedForm, err := t.cfg.normalizer(t.mergePacketAndHeaders(packet, headers))
