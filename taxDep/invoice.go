@@ -7,7 +7,7 @@ import (
 )
 
 func (t *Terminal) SendInvoices(taxRawId *uint, taxProcessId *uint, invoices []types.StandardInvoice, privateKey string, customerid string) (*types.AsyncResponse, error) {
-	token, err := t.GetToken(taxRawId, taxProcessId, uuid.NewString(), privateKey)
+	token, err := t.GetToken(taxRawId, taxProcessId, uuid.NewString(), privateKey, customerid)
 	if err != nil {
 		return nil, err
 	}
@@ -17,14 +17,14 @@ func (t *Terminal) SendInvoices(taxRawId *uint, taxProcessId *uint, invoices []t
 	var requestUniqueId string
 	for i, invoice := range invoices {
 		requestUniqueId = uuid.NewString()
-		packets[i] = *t.buildRequestPacket(invoice, "INVOICE.V01", requestUniqueId)
+		packets[i] = *t.buildRequestPacket(invoice, "INVOICE.V01", requestUniqueId, customerid)
 	}
 	reqId := uuid.NewString()
 	return t.transferAPI.SendPackets(taxRawId, taxProcessId, reqId, packets, "normal-enqueue", token, true, true, privateKey, customerid)
 }
 
-func (t *Terminal) InquiryByReferences(taxRawId *uint, taxProcessId *uint, refs []string, privateKey string) ([]types.InquiryResult, error) {
-	token, err := t.GetToken(taxRawId, taxProcessId, uuid.NewString(), privateKey)
+func (t *Terminal) InquiryByReferences(taxRawId *uint, taxProcessId *uint, refs []string, privateKey string, userName string) ([]types.InquiryResult, error) {
+	token, err := t.GetToken(taxRawId, taxProcessId, uuid.NewString(), privateKey, userName)
 	if err != nil {
 		return nil, err
 	}
@@ -36,9 +36,9 @@ func (t *Terminal) InquiryByReferences(taxRawId *uint, taxProcessId *uint, refs 
 		Refs []string `json:"referenceNumber"`
 	}{
 		Refs: refs,
-	}, version, requestUniqueId)
+	}, version, requestUniqueId, userName)
 
-	resp, err := t.transferAPI.SendPacketInquiry(taxRawId, taxProcessId, requestUniqueId, packet, version, token, false, false, privateKey)
+	resp, err := t.transferAPI.SendPacketInquiry(taxRawId, taxProcessId, requestUniqueId, packet, version, token, false, false, privateKey, userName)
 	if err != nil {
 		return nil, err
 	}

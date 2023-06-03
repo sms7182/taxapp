@@ -44,7 +44,7 @@ func (t *Transfer) signPacket(packet *types.RequestPacket, privateKey string) er
 	return nil
 }
 
-func (t *Transfer) encryptPacket(packet *types.RequestPacket) error {
+func (t *Transfer) encryptPacket(packet *types.RequestPacket, serverPubKey *rsa.PublicKey) error {
 	aesKey := make([]byte, 32)
 	rand.Read(aesKey)
 
@@ -54,7 +54,7 @@ func (t *Transfer) encryptPacket(packet *types.RequestPacket) error {
 		return err
 	}
 
-	symmetricKey, err := t.cfg.pubKeyEncrypter(hexKeyBuff.Bytes(), t.serverPubKey)
+	symmetricKey, err := t.cfg.pubKeyEncrypter(hexKeyBuff.Bytes(), serverPubKey)
 	if err != nil {
 		return err
 	}

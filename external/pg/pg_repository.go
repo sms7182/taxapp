@@ -219,7 +219,7 @@ func (r RepositoryImpl) GetReadyTaxToRetry(ctx context.Context) ([]models.TaxRaw
 
 func (rep RepositoryImpl) GetUserName(ctx context.Context, token string) (*models.Customer, error) {
 	var customer models.Customer
-	if e := rep.DB.WithContext(ctx).Where(" token = ?", token).First(&customer).Error; e != nil {
+	if e := rep.DB.WithContext(ctx).Where(" finance_id = ?", token).First(&customer).Error; e != nil {
 		return nil, e
 	}
 	return &customer, nil

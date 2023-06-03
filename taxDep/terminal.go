@@ -60,12 +60,12 @@ func getPrivateKey(pvPath string) (*rsa.PrivateKey, *rsa.PublicKey, error) {
 	return privateKey, &privateKey.PublicKey, nil
 }
 
-func (t *Terminal) buildRequestPacket(data any, packetType string, uuid string) *types.RequestPacket {
+func (t *Terminal) buildRequestPacket(data any, packetType string, uuid string, clientId string) *types.RequestPacket {
 	return &types.RequestPacket{
 		UID:        uuid,
 		PacketType: packetType,
 		Retry:      false,
 		Data:       data,
-		FiscalId:   t.clientID,
+		FiscalId:   clientId,
 	}
 }

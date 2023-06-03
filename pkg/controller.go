@@ -52,7 +52,7 @@ func (cr Controller) sendInvoice(c *gin.Context) {
 	reqBody, _ := ioutil.ReadAll(request.Body)
 	request.Body.Close()
 	_ = json.Unmarshal(reqBody, &rawTransaction)
-	err := cr.Service.StartSendingInvoice(rawTransaction)
+	err := cr.Service.StartSendingInvoice(context.Background(), rawTransaction)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
@@ -79,7 +79,9 @@ func (cr Controller) getTaxProcess(c *gin.Context) {
 }
 
 func (cr Controller) inquiry(c *gin.Context) {
-	go cr.Service.TaxRequestInquiry()
+	userName := c.Param("userName")
+
+	go cr.Service.TaxRequestInquiry(userName)
 	c.JSON(http.StatusOK, gin.H{})
 }
 
