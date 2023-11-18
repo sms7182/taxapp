@@ -36,16 +36,16 @@ func (service Service) InitialCustomer(dto *external.CustomerDto) (*uint, error)
 }
 func (service Service) StartSendingInvoice(ctx context.Context, data external.RawTransaction) error {
 	farvardin1, _ := time.Parse(layout, "2023-03-20T23:59:59")
-
+	log.Printf("befor check  farvardin")
 	if time.UnixMilli(data.After.Indatim).Before(farvardin1) {
 		return nil
 	}
-
+	log.Printf("after check farvardin")
 	validCustomer, err := service.Repository.GetUserName(ctx, data.After.Username)
 	if err != nil || validCustomer == nil {
-		if(err!=nil){
-		  fmt.Sprintf("founding user has error %s",err)
-		  return err
+		if err != nil {
+			fmt.Sprintf("founding user has error %s", err)
+			return err
 		}
 		fmt.Sprintf("customer not found")
 		return nil

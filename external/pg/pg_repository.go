@@ -2,6 +2,7 @@ package pg
 
 import (
 	"context"
+	"log"
 	"tax-management/external"
 	"tax-management/external/pg/models"
 	models2 "tax-management/external/pg/models"
@@ -58,10 +59,12 @@ func (r RepositoryImpl) InsertTaxData(ctx context.Context, rawType string, taxDa
 		UniqueId: taxData.After.Trn + "-" + rawType,
 	}
 	tax.TaxData.Set(taxData)
+	log.Printf("befor check toTaxProcess")
 	taxProcess := toTaxProcess(tax, rawType, companyName, taxData)
-
+	log.Printf("befor insert to db in insertTaxData method")
 	err := r.DB.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if e := tx.Clauses(clause.Returning{}).Create(&tax).Error; e != nil {
+			log.Printf("insert in db has error %s", e)
 			return e
 		}
 		taxProcess.TaxRawId = tax.Id
@@ -71,10 +74,12 @@ func (r RepositoryImpl) InsertTaxData(ctx context.Context, rawType string, taxDa
 		}
 		taxId := terminal.GenerateTaxID(taxData.After.Username, taxProcess.Id, time.UnixMilli(taxData.After.Indatim))
 		taxProcess.TaxId = &taxId
+		log.Printf("after generate of taxid")
 
 		if e := tx.Model(&models2.TaxProcess{}).Where("id = ?", taxProcess.Id).Update("tax_id", taxId).Error; e != nil {
 			return e
 		}
+		log.Printf("inser to taxprocess history")
 		tph := models2.ToTaxProcessHistory(taxProcess)
 		return tx.WithContext(ctx).Create(&tph).Error
 
