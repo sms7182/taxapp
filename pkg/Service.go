@@ -43,6 +43,11 @@ func (service Service) StartSendingInvoice(ctx context.Context, data external.Ra
 
 	validCustomer, err := service.Repository.GetUserName(ctx, data.After.Username)
 	if err != nil || validCustomer == nil {
+		if(err!=nil){
+		  fmt.Sprintf("founding user has error %s",err)
+		  return err
+		}
+		fmt.Sprintf("customer not found")
 		return nil
 	}
 
