@@ -62,6 +62,7 @@ func (service Service) StartSendingInvoice(ctx context.Context, data external.Ra
 	}
 	res, err := service.TaxClient.SendInvoices(&rawDataId, &taxProcessId, invoice, validCustomer.PrivateKey, validCustomer.FinanceId)
 	if err != nil {
+		fmt.Printf("sending invoices has error %s", err)
 		service.Repository.UpdateTaxProcessStatus(ctx, taxProcessId, models.TaxStatusFailed.String(), nil)
 		return nil
 	}
