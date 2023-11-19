@@ -18,7 +18,7 @@ type Controller struct {
 
 func (cr Controller) SetRoutes(e *gin.Engine) {
 	e.GET("/health", cr.health)
-	e.GET("/tax/fire_inquiry", cr.inquiry)
+	e.GET("/tax/fire_inquiry/:userName", cr.inquiry)
 
 	e.GET("/autoRetryInvoice", cr.autoRetry)
 	e.GET("/taxprocess/:id", cr.getTaxProcess)

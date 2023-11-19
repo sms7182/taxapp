@@ -101,10 +101,10 @@ func (r RawTransaction) ToStandardInvoice(taxId string) []types.StandardInvoice 
 	}
 	return []types.StandardInvoice{
 		{
-			Header:     header,
-			Body:       items,
-			Payments:   nil,
-			Extensions: nil,
+			Header:   header,
+			Body:     items,
+			Payments: nil,
+			//	Extensions: nil,
 		},
 	}
 }

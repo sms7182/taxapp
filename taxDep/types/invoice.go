@@ -1,10 +1,10 @@
 package types
 
 type StandardInvoice struct {
-	Header     InvoiceHeader       `json:"header"`
-	Body       []InvoiceItem       `json:"body"`
-	Payments   []InvoicePayments   `json:"payments"`
-	Extensions []InvoiceExtensions `json:"extensions"`
+	Header   InvoiceHeader     `json:"header"`
+	Body     []InvoiceItem     `json:"body"`
+	Payments []InvoicePayments `json:"payments"`
+	//Extensions []InvoiceExtensions `json:"extensions"`
 }
 
 type InvoiceHeader struct {
