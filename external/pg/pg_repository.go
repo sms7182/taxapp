@@ -152,7 +152,7 @@ func toTaxProcess(tax models2.TaxRawDomain, rawType string, companyName string, 
 func (r RepositoryImpl) GetInProgressTaxProcess(ctx context.Context) (taxProcesses []models.RawProcessTaxData, err error) {
 
 	var rawPTData []models.RawProcessTaxData
-	sqlStr := `select tp.id, tp.tax_raw_id, tp.tax_org_reference_id,tp.tax_id 	from tax_process tp where tp.status = 'in-progress' order by tp.created_at limit 512`
+	sqlStr := `select tp.id, tp.tax_raw_id, tp.tax_org_reference_id,tp.tax_id 	from tax_process tp where (tp.status = 'in-progress' or tp.status='pending') order by tp.created_at limit 512`
 	if e := r.DB.Raw(sqlStr).Scan(&rawPTData).Error; e != nil {
 		return nil, e
 	}

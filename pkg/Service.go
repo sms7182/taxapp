@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"tax-management/external"
 	"tax-management/external/pg/models"
 	"tax-management/taxDep/types"
@@ -122,8 +123,8 @@ func (s Service) TaxRequestInquiry(userName string) {
 			if err == nil && len(inquiryResult) > 0 {
 				if inquiryResult[0].Data.Success {
 					s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.TaxStatusCompleted.String(), &inquiryResult[0].Data.ConfirmationReferenceID)
-				} else {
-					s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.TaxStatusFailed.String(), nil)
+				} else if strings.ToLower(inquiryResult[0].Status) == models.TaxStatusPending.String() {
+					s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.TaxStatusPending.String(), nil)
 				}
 			} else {
 				s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.TaxStatusFailed.String(), nil)

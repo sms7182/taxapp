@@ -16,10 +16,11 @@ const (
 	TaxStatusInProgress
 	TaxStatusFailed
 	TaxStatusCompleted
+	TaxStatusPending
 )
 
 func (ts TaxStatus) String() string {
-	return []string{"sending", "in-progress", "failed", "completed"}[ts]
+	return []string{"sending", "in-progress", "failed", "completed", "pending"}[ts]
 }
 
 type TaxProcess struct {
