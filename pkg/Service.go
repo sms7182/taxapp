@@ -123,11 +123,13 @@ func (s Service) TaxRequestInquiry(userName string) {
 			if err == nil && len(inquiryResult) > 0 {
 				if inquiryResult[0].Data.Success {
 					s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.TaxStatusCompleted.String(), &inquiryResult[0].Data.ConfirmationReferenceID)
+				} else if strings.ToLower(inquiryResult[0].Status) == models.TaxStatusFailed.String() {
+					s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.TaxStatusFailed.String(), nil)
 				} else if strings.ToLower(inquiryResult[0].Status) == models.TaxStatusPending.String() {
 					s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.TaxStatusPending.String(), nil)
 				}
 			} else {
-				s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[i].Id, models.TaxStatusFailed.String(), nil)
+				s.Repository.UpdateTaxProcessStatus(context.Background(), taxProcess[0].Id, models.TaxStatusFailed.String(), nil)
 			}
 
 		}
