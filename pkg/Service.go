@@ -35,21 +35,21 @@ func (service Service) InitialCustomer(dto *external.CustomerDto) (*uint, error)
 	}
 	return id, nil
 }
-func (service Service) StartSendingInvoice(ctx context.Context, data external.RawTransaction) error {
+func (service Service) StartSendingInvoice(ctx context.Context, data external.RawTransaction) (*string, error) {
 	farvardin1, _ := time.Parse(layout, "2023-03-20T23:59:59")
 	log.Printf("befor check  farvardin")
 	if time.UnixMilli(data.After.Indatim).Before(farvardin1) {
-		return nil
+		return nil, fmt.Errorf("befor march2023 invalid")
 	}
 	log.Printf("after check farvardin")
 	validCustomer, err := service.Repository.GetUserName(ctx, data.After.Username)
 	if err != nil || validCustomer == nil {
 		if err != nil {
 			fmt.Sprintf("founding user has error %s", err)
-			return err
+			return nil, err
 		}
 		fmt.Sprintf("customer not found")
-		return nil
+		return nil, fmt.Errorf("customer not found")
 	}
 
 	rawDataId, taxProcessId, taxId, e := service.Repository.InsertTaxData(ctx, "", data, validCustomer.FinanceId)
@@ -65,49 +65,16 @@ func (service Service) StartSendingInvoice(ctx context.Context, data external.Ra
 	if err != nil {
 		log.Printf("sending invoices has error %s", err)
 		service.Repository.UpdateTaxProcessStatus(ctx, taxProcessId, models.TaxStatusFailed.String(), nil)
-		return err
+		return nil, err
 	}
 	if len(res.Result) > 0 && len(res.Errors) == 0 {
 		arp := res.Result[0]
-		return service.Repository.UpdateTaxReferenceId(ctx, taxProcessId, arp.ReferenceNumber, &data.After.Trn, &arp.UID)
+		id, err := service.Repository.UpdateTaxReferenceId(ctx, taxProcessId, arp.ReferenceNumber, &data.After.Trn, &arp.UID)
+		return &id, err
 	}
 
-	return errors.New("failed to process kafka message")
+	return nil, errors.New("failed to process kafka message")
 }
-
-// func (s Service) ProcessKafkaMessage(topicName string, data external.RawTransaction) error {
-// 	ctx := context.Background()
-
-// 	if s.Repository.IsNotProcessable(ctx, topicName, data.After.Trn) {
-// 		return nil
-// 	}
-
-// 	farvardin1, _ := time.Parse(layout, "2023-03-20T23:59:59")
-
-// 	if time.UnixMilli(data.After.Indatim).Before(farvardin1) {
-// 		return nil
-// 	}
-// 	rawDataId, taxProcessId, taxId, e := s.Repository.InsertTaxData(context.Background(), topicName, data, s.UsernameToCompanyName[data.After.Username])
-// 	if e != nil {
-// 		panic(fmt.Sprintf("failed, topic: %s, data: %+v", topicName, data))
-// 	}
-
-// 	invoice := data.ToStandardInvoice(taxId)
-// 	if len(invoice) == 1 {
-// 		s.Repository.UpdateTaxProcessStandardInvoice(ctx, taxProcessId, invoice[0])
-// 	}
-// 	res, err := s.TaxClient.SendInvoices(&rawDataId, &taxProcessId, invoice)
-// 	if err != nil {
-// 		s.Repository.UpdateTaxProcessStatus(ctx, taxProcessId, models.TaxStatusFailed.String(), nil)
-// 		return nil
-// 	}
-// 	if len(res.Result) > 0 && len(res.Errors) == 0 {
-// 		arp := res.Result[0]
-// 		return s.Repository.UpdateTaxReferenceId(ctx, taxProcessId, arp.ReferenceNumber, &data.After.Trn, &arp.UID)
-// 	}
-
-// 	return errors.New("failed to process kafka message")
-// }
 
 func (s Service) TaxRequestInquiry(userName string) {
 	taxProcess, err := s.Repository.GetInProgressTaxProcess(context.Background())

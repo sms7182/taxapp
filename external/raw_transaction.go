@@ -2,36 +2,45 @@ package external
 
 import "tax-management/taxDep/types"
 
-type AfterData struct {
-	Username string  `json:"user_name"`
-	Tinb     string  `json:"tinb"`
-	Tins     string  `json:"tins"`
-	Adis     float64 `json:"adis"`
-	Am       float64 `json:"am"`
-	Dis      float64 `json:"dis"`
-	Fee      float64 `json:"fee"`
-	Indatim  int64   `json:"indatim"`
-	Inp      int64   `json:"inp"`
-	Ins      int64   `json:"ins"`
-	Inty     int64   `json:"inty"`
-	Prdis    float64 `json:"prdis"`
-	Setm     int64   `json:"setm"`
-	Sstid    string  `json:"sstid"`
-	Tadis    float64 `json:"tadis"`
-	Tbill    float64 `json:"tbill"`
-	Tdis     float64 `json:"tdis"`
-	Tob      int64   `json:"tob"`
-	Todam    float64 `json:"todam"`
-	Tprdis   float64 `json:"tprdis"`
-	Trn      string  `json:"trn"`
-	Tsstam   float64 `json:"tsstam"`
-	Tvam     float64 `json:"tvam"`
-	Vam      float64 `json:"vam"`
-	Vra      float64 `json:"vra"`
-	Cap      float64 `json:"cap"`
-	Bid      string  `json:"bid"`
-	Insp     float64 `json:"insp"`
-	IrTaxid  string  `json:"irtaxid"`
+type Master struct {
+	Username string `json:"user_name"`
+	Tinb     string `json:"tinb"`
+	Tins     string `json:"tins"`
+
+	Indatim int64 `json:"indatim"`
+	Inp     int64 `json:"inp"`
+	Ins     int64 `json:"ins"`
+	Inty    int64 `json:"inty"`
+	Setm    int64 `json:"setm"`
+
+	Tadis  float64 `json:"tadis"`
+	Tbill  float64 `json:"tbill"`
+	Tdis   float64 `json:"tdis"`
+	Tob    int64   `json:"tob"`
+	Todam  float64 `json:"todam"`
+	Tprdis float64 `json:"tprdis"`
+	Trn    string  `json:"trn"`
+
+	Tvam float64 `json:"tvam"`
+
+	Cap     float64  `json:"cap"`
+	Bid     string   `json:"bid"`
+	Insp    float64  `json:"insp"`
+	IrTaxid string   `json:"irtaxid"`
+	Detail  []Detail `json:"detail"`
+}
+type Detail struct {
+	Sstid string  `json:"sstid"`
+	Am    float64 `json:"am"`
+	Fee   float64 `json:"fee"`
+	Prdis float64 `json:"prdis"`
+
+	Dis  float64 `json:"dis"`
+	Adis float64 `json:"adis"`
+
+	Vra    float64 `json:"vra"`
+	Vam    float64 `json:"vam"`
+	Tsstam float64 `json:"tsstam"`
 }
 type SourceData struct {
 	Connector string      `json:"connector"`
@@ -55,7 +64,7 @@ type CustomerDto struct {
 	UserName   string `json:"userName"`
 }
 type RawTransaction struct {
-	After       AfterData   `json:"after"`
+	After       Master      `json:"after"`
 	Op          string      `json:"op"`
 	Source      SourceData  `json:"source"`
 	Transaction interface{} `json:"transaction"`
@@ -86,19 +95,22 @@ func (r RawTransaction) ToStandardInvoice(taxId string) []types.StandardInvoice 
 		Insp:    after.Insp,
 		Irtaxid: after.IrTaxid,
 	}
-	items := []types.InvoiceItem{
-		{
-			Sstid:  after.Sstid,
-			Am:     after.Am,
-			Fee:    after.Fee,
-			Prdis:  after.Prdis,
-			Dis:    after.Dis,
-			Adis:   after.Adis,
-			Vra:    after.Vra,
-			Vam:    after.Vam,
-			Tsstam: after.Tsstam,
-		},
+	var items []types.InvoiceItem
+	for i := 0; i < len(after.Detail); i++ {
+		detail := after.Detail[i]
+		items = append(items, types.InvoiceItem{
+			Sstid:  detail.Sstid,
+			Am:     detail.Am,
+			Fee:    detail.Fee,
+			Prdis:  detail.Prdis,
+			Dis:    detail.Dis,
+			Adis:   detail.Adis,
+			Vra:    detail.Vra,
+			Vam:    detail.Vam,
+			Tsstam: detail.Tsstam,
+		})
 	}
+
 	return []types.StandardInvoice{
 		{
 			Header:   header,

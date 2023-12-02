@@ -98,7 +98,7 @@ func (r RepositoryImpl) UpdateTaxProcessStandardInvoice(ctx context.Context, tax
 	return r.DB.Model(&models2.TaxProcess{}).Where("id = ?", taxProcessId).Updates(updTax).Error
 }
 
-func (r RepositoryImpl) UpdateTaxReferenceId(ctx context.Context, taxProcessId uint, taxOrgReferenceId string, taxOrgInternalTrn *string, taxOrgInquiryUuid *string) error {
+func (r RepositoryImpl) UpdateTaxReferenceId(ctx context.Context, taxProcessId uint, taxOrgReferenceId string, taxOrgInternalTrn *string, taxOrgInquiryUuid *string) (string, error) {
 	updTax := models2.TaxProcess{
 		Id:                taxProcessId,
 		Status:            models2.TaxStatusInProgress.String(),
@@ -106,7 +106,7 @@ func (r RepositoryImpl) UpdateTaxReferenceId(ctx context.Context, taxProcessId u
 		InternalTrn:       taxOrgInternalTrn,
 		InquiryUuid:       taxOrgInquiryUuid,
 	}
-	return r.DB.Transaction(func(tx *gorm.DB) error {
+	return string(taxProcessId), r.DB.Transaction(func(tx *gorm.DB) error {
 		if e := tx.Model(&models2.TaxProcess{}).Where("id = ?", taxProcessId).Updates(updTax).Error; e != nil {
 			return e
 		}

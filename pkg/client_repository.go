@@ -13,7 +13,7 @@ type Repository interface {
 	IsNotProcessable(ctx context.Context, topic string, trn string) bool
 	NumberOfFailureExceeded() bool
 	InsertTaxData(ctx context.Context, rawType string, taxData external.RawTransaction, companyName string) (rawDataId uint, taxProcessId uint, taxId string, err error)
-	UpdateTaxReferenceId(ctx context.Context, taxProcessId uint, taxOrgReferenceId string, taxOrgInternalTrn *string, taxOrgInquiryUuid *string) error
+	UpdateTaxReferenceId(ctx context.Context, taxProcessId uint, taxOrgReferenceId string, taxOrgInternalTrn *string, taxOrgInquiryUuid *string) (string, error)
 	GetInProgressTaxProcess(ctx context.Context) (taxProcesses []models.RawProcessTaxData, err error)
 	UpdateTaxProcessStatus(ctx context.Context, taxProcessId uint, status string, confirmationReferenceId *string) error
 	GetFailedTaxProcess(ctx context.Context) (failedTaxProcess []models.FailedTaxProcess, err error)

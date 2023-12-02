@@ -24,6 +24,7 @@ func (cr Controller) SetRoutes(e *gin.Engine) {
 	e.GET("/taxprocess/:id", cr.getTaxProcess)
 	e.POST("/init_customer", cr.initCustomer)
 	e.POST("/sendInvoice", cr.sendInvoice)
+	e.POST("/sendInvoices", cr.sendInvoices)
 }
 
 func (cr Controller) initCustomer(c *gin.Context) {
@@ -46,18 +47,34 @@ func (cr Controller) initCustomer(c *gin.Context) {
 	c.JSON(http.StatusOK, customerId)
 
 }
+
+func (cr Controller) sendInvoices(c *gin.Context) {
+	var rawTransaction external.RawTransaction
+
+	request := c.Request
+	reqBody, _ := ioutil.ReadAll(request.Body)
+	request.Body.Close()
+	_ = json.Unmarshal(reqBody, &rawTransaction)
+	id, err := cr.Service.StartSendingInvoice(context.Background(), rawTransaction)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+	c.JSON(http.StatusOK, id)
+}
+
 func (cr Controller) sendInvoice(c *gin.Context) {
 	var rawTransaction external.RawTransaction
 	request := c.Request
 	reqBody, _ := ioutil.ReadAll(request.Body)
 	request.Body.Close()
 	_ = json.Unmarshal(reqBody, &rawTransaction)
-	err := cr.Service.StartSendingInvoice(context.Background(), rawTransaction)
+	id, err := cr.Service.StartSendingInvoice(context.Background(), rawTransaction)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{})
+	c.JSON(http.StatusOK, id)
 }
 func (cr Controller) health(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
