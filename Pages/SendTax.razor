@@ -1,12 +1,18 @@
-﻿@page "/fetchdata"
+﻿@page "/sendtax"
+
 @inject HttpClient Http
 @using SendTaxDataApp.Shared
 @using SendTaxDataApp.Models
+@using SendTaxDataApp.Models.Enums
 @using System.Text.RegularExpressions
 @using System.ComponentModel.DataAnnotations
+@using System;
+@using SendTaxDataApp.Helpers;
+@using System.Text.Json;
 
 @* <EditForm Model="@model" OnValidSubmit="OnValidSubmit"> *@
- <DataAnnotationsValidator/>
+ @* <DataAnnotationsValidator/> *@
+ 
 <MudGrid>
     <MudItem xs="8" sm="5">
         <MudCard>
@@ -15,17 +21,13 @@
                               @bind-Value="model.Tinb" For="@(() => model.Tinb)"/>
                 <MudTextField Label="شماره اقتصادی فروشنده" Class="mt-3"
                               @bind-Value="model.Tins" For="@(() => model.Tins)"/>
-                <MudSelect T="string" Label="موضوع صورت حساب" AnchorOrigin="Origin.BottomCenter">
-                    <MudSelectItem Value="@("اصلی")" />
-                    <MudSelectItem Value="@("اصلاحی")" />
-                    <MudSelectItem Value="@("ابطالی")" />
-                    <MudSelectItem Value="@("برگشت فروش")" />
+                <MudSelect T="InvoiceSubjectType"  ValueChanged="@SubjectTypeChanged" Label="موضوع صورت حساب"  AnchorOrigin="Origin.BottomCenter" >
+                    @foreach (InvoiceSubjectType item in Enum.GetValues(typeof(InvoiceSubjectType))){
+                                <MudSelectItem Value="@item">@item.GetDescription()</MudSelectItem>}
                 </MudSelect>
-                 <MudSelect T="string" Label="الگوی صورتحساب" AnchorOrigin="Origin.BottomCenter">
-                    <MudSelectItem Value="@("نوع اول")" />
-                    <MudSelectItem Value="@("نوع دوم")" />
-                    <MudSelectItem Value="@("نوع سوم")" />
-                   
+                <MudSelect T="InvoicePattern"ValueChanged="@PatternChanged"  Label="الگوی صورتحساب"  AnchorOrigin="Origin.BottomCenter">
+                     @foreach (InvoicePattern item in Enum.GetValues(typeof(InvoicePattern))){
+                                <MudSelectItem Value="@item">@item.GetDescription()</MudSelectItem>}
                 </MudSelect>
             </MudCardContent>
            
@@ -35,16 +37,15 @@
     <MudItem xs="8" sm="5">
         <MudCard>
             <MudCardContent>
-                 <MudSelect T="string" Label="روش تسویه" AnchorOrigin="Origin.BottomCenter">
-                    <MudSelectItem Value="@("نقدی")" />
-                    <MudSelectItem Value="@("اعتباری")" />
-                    <MudSelectItem Value="@("نقدی/اعتباری")" />
-                   
+                 <MudSelect T="PaymentType"  ValueChanged="@PaymentChanged"  Label="روش تسویه" AnchorOrigin="Origin.BottomCenter">
+                 
+                   @foreach (PaymentType item in Enum.GetValues(typeof(PaymentType))){
+                                <MudSelectItem Value="@item">@item.GetDescription()</MudSelectItem>}
                 </MudSelect>
                 <MudTextField  Disabled="true"Label="مجموع مبلغ قبل از کسر تخفیف" 
                               @bind-Value="model.Tprdis" For="@(() => model.Tprdis)"/>
                 <MudTextField Disabled="true" Label="مجموع تخفیفات" 
-                              @bind-Value="model.Tdis" For="@(() => model.Tdis)"/>
+                              @bind-Value="model.Tdis" />
              
                
                 </MudCardContent>
@@ -54,7 +55,7 @@
 
 <MudItem xs="15" sm="20">
   <MudCard>
-    <MudTable Items="invoiceItems" Hover="true" SortLabel="Sort By" Elevation="0">
+    <MudTable Items="invoiceItems" Hover="true" RowEditCommit="edit" SortLabel="Sort By" Elevation="0">
         <ToolBarContent>
         <MudText Typo="Typo.h6">اقلام فاکتور مالیاتی</MudText>
         <MudSpacer />
@@ -85,14 +86,14 @@
         </RowTemplate>
           <RowEditingTemplate>
             <MudTd DataLabel="شناسه کالا"> <MudTextField @bind-Value="@context.Sstid" Required /></MudTd>
-            <MudTd DataLabel="تعداد"><MudTextField @bind-Value="@context.Am" Required /></MudTd>
-            <MudTd DataLabel="مبلغ واحد کالا"><MudTextField @bind-Value="@context.Fee" Required /></MudTd>
+            <MudTd DataLabel="تعداد"><MudTextField  @bind-Value="@context.Am" Required /></MudTd>
+            <MudTd DataLabel="مبلغ واحد کالا"><MudTextField  @bind-Value="@context.Fee" Required /></MudTd>
             <MudTd DataLabel="مبلغ قبل از تخفیف">@context.Prdis</MudTd>
-            <MudTd DataLabel="مبلغ تخفیف"><MudTextField @bind-Value="@context.Dis" Required /></MudTd>
+            <MudTd DataLabel="مبلغ تخفیف"><MudTextField  @bind-Value="@context.Dis" Required /></MudTd>
             <MudTd DataLabel="مبلغ بعد از تخفیف">@context.Adis </MudTd>
-            <MudTd DataLabel="نرخ مالیات بر ارزش افزوده"><MudTextField @bind-Value="@context.Vra" Required /></MudTd>
-            <MudTd DataLabel="مبلغ مالیات بر ارزش افزوده"><MudTextField @bind-Value="@context.Vam" Required /></MudTd>
-            <MudTd DataLabel="مبلغ کل کالا/خدمت"><MudTextField @bind-Value="@context.Tsstam" Required /></MudTd>
+            <MudTd DataLabel="نرخ مالیات بر ارزش افزوده"><MudTextField  @bind-Value="@context.Vra" Required /></MudTd>
+            <MudTd DataLabel="مبلغ مالیات بر ارزش افزوده">@context.Vam</MudTd>
+            <MudTd DataLabel="مبلغ کل کالا/خدمت">@context.Tsstam</MudTd>
         </RowEditingTemplate>
         
         <PagerContent>
@@ -102,7 +103,7 @@
      </MudCard>
   </MudItem>
  <MudCardActions>
-                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
+                <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto" @onclick="OnValidSubmit">Register</MudButton>
             </MudCardActions>
 
 </MudGrid> 
@@ -113,18 +114,60 @@
     MudTextField<string> pwField1;
     MudForm form;
     Invoice model=new Invoice();
+   
     private List<InvoiceItem> invoiceItems;
-          private void AddEmptyElement()
+        private void edit(object invoiceItem){
+            model.Tdis=model.Tdis+((InvoiceItem)invoiceItem).Dis;
+        model.Tadis=model.Tadis+((InvoiceItem)invoiceItem).Adis;
+      model.Tprdis=model.Tprdis+((InvoiceItem)invoiceItem).Prdis;
+        model.Tvam=model.Tvam+((InvoiceItem)invoiceItem).Vam;
+        model.Tbill=model.Tbill+((InvoiceItem)invoiceItem).Tsstam;
+        model.Cap=model.Tbill;
+          
+        string jsonString = JsonSerializer.Serialize(model);
+
+        Console.WriteLine(jsonString);
+        }
+     private void AddEmptyElement()
     {
+        
         invoiceItems.Add(new InvoiceItem());
     }
     protected override async Task OnInitializedAsync()
     {
-        invoiceItems = new List<InvoiceItem>();//await Http.GetFromJsonAsync<WeatherForecast[]>("sample-data/weather.json");
+       
+        invoiceItems = new List<InvoiceItem>();
     }
-    private void OnValidSubmit(EditContext context)
+    private void calculateAll(){
+        model.Tdis=invoiceItems.Sum(d=>d.Dis);
+        model.Tadis=invoiceItems.Sum(d=>d.Adis);
+        model.Tprdis=invoiceItems.Sum(d=>d.Prdis);
+        model.Tvam=invoiceItems.Sum(d=>d.Vam);
+        model.Tbill=invoiceItems.Sum(d=>d.Tsstam);
+        model.Cap=model.Tbill;
+    }
+    private void OnValidSubmit()
     {
         success = true;
         model.Items=invoiceItems;
+      
+       calculateAll();
+        
+
     }
+
+    public void SubjectTypeChanged(InvoiceSubjectType subjectType){
+       
+
+       model.Ins=(int)subjectType;
+    }
+    public void PatternChanged(InvoicePattern invoicePattern){
+       
+        model.Inp=(int)invoicePattern;
+    }
+     public void PaymentChanged(PaymentType paymentType){
+       
+        model.Setm=(int)paymentType;
+    }
+    
 }
