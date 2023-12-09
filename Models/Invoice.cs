@@ -17,6 +17,6 @@ public decimal Tprdis { get; set; }
 public decimal Todam { get; set; }
 public decimal Tdis {get;set;}
 public decimal Cap { get; set; }  
-public List<InvoiceItem> Items{get;set;}
+public List<InvoiceItem> Detail{get;set;}
 }
 }

@@ -9,6 +9,8 @@
 @using System;
 @using SendTaxDataApp.Helpers;
 @using System.Text.Json;
+@using System.Collections.Generic;
+@using System.Net.Http;
 
 @* <EditForm Model="@model" OnValidSubmit="OnValidSubmit"> *@
  @* <DataAnnotationsValidator/> *@
@@ -146,14 +148,26 @@
         model.Tbill=invoiceItems.Sum(d=>d.Tsstam);
         model.Cap=model.Tbill;
     }
-    private void OnValidSubmit()
+    private async Task OnValidSubmit()
     {
         success = true;
-        model.Items=invoiceItems;
+        model.Detail=invoiceItems;
       
        calculateAll();
-        
+        var tax=new TaxData{
+            After=model,
+            Token="Test"
+        };
+        using var httpClient=new HttpClient();
+        httpClient.BaseAddress=new Uri("http://localhost:1401");
+        @* using StringContent jsonContent = new(
+        JsonSerializer.Serialize(tax),       
+        "application/json"); *@
+        JsonContent content = JsonContent.Create(tax);
+    using HttpResponseMessage result=  await  httpClient.PostAsync("/sendInvoices",content);
 
+        var jsonResponse = await result.Content.ReadAsStringAsync();
+    Console.WriteLine($"{jsonResponse}\n");
     }
 
     public void SubjectTypeChanged(InvoiceSubjectType subjectType){
