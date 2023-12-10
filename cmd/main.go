@@ -62,7 +62,9 @@ func main() {
 		Service: service,
 	}
 	router := gin.New()
+	router.SetTrustedProxies([]string{"https://localhost:5001"})
 	controller.SetRoutes(router)
+
 	router.Run(viper.GetString("serverPort"))
 }
 
