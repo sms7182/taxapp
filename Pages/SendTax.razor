@@ -11,6 +11,7 @@
 @using System.Text.Json;
 @using System.Collections.Generic;
 @using System.Net.Http;
+@using System.Globalization
 
 @* <EditForm Model="@model" OnValidSubmit="OnValidSubmit"> *@
  @* <DataAnnotationsValidator/> *@
@@ -21,7 +22,7 @@
             <MudCardContent>
                 <MudTextField Label="شماره اقتصادی خرید" HelperText="Max. 8 characters"
                               @bind-Value="model.Tinb" For="@(() => model.Tinb)"/>
-                <MudTextField Label="شماره اقتصادی فروشنده" Class="mt-3"
+                <MudTextField Label="شماره اقتصادی فروشنده"
                               @bind-Value="model.Tins" For="@(() => model.Tins)"/>
                 <MudSelect T="InvoiceSubjectType"  ValueChanged="@SubjectTypeChanged" Label="موضوع صورت حساب"  AnchorOrigin="Origin.BottomCenter" >
                     @foreach (InvoiceSubjectType item in Enum.GetValues(typeof(InvoiceSubjectType))){
@@ -39,17 +40,21 @@
     <MudItem xs="8" sm="5">
         <MudCard>
             <MudCardContent>
+                
+                 <MudSelect T="IntyType"  ValueChanged="@IntyChanged"  Label="نوع صورتحساب‌" AnchorOrigin="Origin.BottomCenter">
+                 
+                   @foreach (IntyType item in Enum.GetValues(typeof(IntyType))){
+                                <MudSelectItem Value="@item">@item.GetDescription()</MudSelectItem>}
+                </MudSelect> 
                  <MudSelect T="PaymentType"  ValueChanged="@PaymentChanged"  Label="روش تسویه" AnchorOrigin="Origin.BottomCenter">
                  
                    @foreach (PaymentType item in Enum.GetValues(typeof(PaymentType))){
                                 <MudSelectItem Value="@item">@item.GetDescription()</MudSelectItem>}
                 </MudSelect>
-                <MudTextField  Disabled="true"Label="مجموع مبلغ قبل از کسر تخفیف" 
-                              @bind-Value="model.Tprdis" For="@(() => model.Tprdis)"/>
-                <MudTextField Disabled="true" Label="مجموع تخفیفات" 
-                              @bind-Value="model.Tdis" />
-             
-               
+                <MudTextField  Disabled="true"Label="مجموع مبلغ قبل از کسر تخفیف"  @bind-Value="model.Tprdis" For="@(() => model.Tprdis)"/>
+                <MudTextField Disabled="true" Label="مجموع تخفیفات"  @bind-Value="model.Tdis" />
+
+                <MudDatePicker Label="تاریخ فاکتور" Date="date" DateFormat="@dateFormat" TextChanged="DatePickerTextChanged" />
                 </MudCardContent>
         </MudCard>
     </MudItem>
@@ -115,8 +120,13 @@
     string[] errors = { };
     MudTextField<string> pwField1;
     MudForm form;
+    string dateFormat = "yyyy-MM-dd";//"dd.MM.yyyy";
     Invoice model=new Invoice();
    
+   DateTime? date=DateTime.Now;
+  string us="A16XAX";
+  
+   string bound = "not set";
     private List<InvoiceItem> invoiceItems;
         private void edit(object invoiceItem){
             model.Tdis=model.Tdis+((InvoiceItem)invoiceItem).Dis;
@@ -152,12 +162,17 @@
     {
         success = true;
         model.Detail=invoiceItems;
-      
+       
+         string bound = "not set";
+        model.Indatim= date.Value.ToUniversalTime().Subtract(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
        calculateAll();
         var tax=new TaxData{
             After=model,
             Token="Test"
         };
+        string jsonString = JsonSerializer.Serialize(model);
+
+        Console.WriteLine(jsonString);
         using var httpClient=new HttpClient();
         httpClient.BaseAddress=new Uri("http://localhost:1401");
         @* using StringContent jsonContent = new(
@@ -175,6 +190,10 @@
 
        model.Ins=(int)subjectType;
     }
+
+    public void IntyChanged(IntyType intyType){
+        model.Inty=(int)intyType;
+    }
     public void PatternChanged(InvoicePattern invoicePattern){
        
         model.Inp=(int)invoicePattern;
@@ -182,6 +201,37 @@
      public void PaymentChanged(PaymentType paymentType){
        
         model.Setm=(int)paymentType;
+    }
+
+     private void DatePickerTextChanged(string value)
+    {
+        if (value == null || value.Length < 6)
+        {
+            date = null;
+        }
+        else
+        {
+            string[] formats = { "ddMMyy", "dd.MM.yyyy", "dd.M.yyyy", "d.MM.yyyy", "d.M.yyyy", "dd.MM.yy", "dd.M.yy", "d.MM.yy", "d.M.yy","yyyy-MM-dd" };
+            if (DateTime.TryParseExact(value, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime validDate))
+            {
+                date = validDate;
+               model.Indatim= date.Value.ToUniversalTime().Subtract(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
+               Console.WriteLine(model.Indatim);
+            }
+            else
+            {
+                date = null;
+            }
+        }
+
+        if (date.HasValue)
+        {
+            bound = date.Value.ToString(dateFormat); 
+        }
+        else
+        {
+            bound = "not set";
+        }
     }
     
 }
